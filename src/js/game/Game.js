@@ -379,27 +379,53 @@ class Game {
     );
   }
 
-  // Save city to localStorage
-  saveCity() {
+  // Save city (quick save to current file, or Save As if no file)
+  async saveCity() {
     const saveData = {
+      version: 1,
+      timestamp: Date.now(),
       city: this.city.serialize(),
       budget: this.budget.serialize(),
       simulation: this.simulation.serialize()
     };
-    localStorage.setItem('claudeCity_save', JSON.stringify(saveData));
-    alert('City saved!');
+
+    const jsonData = JSON.stringify(saveData, null, 2);
+
+    // Try quick save first
+    const result = await window.electronAPI?.quickSave(jsonData);
+
+    if (result?.success) {
+      this.showSaveNotification('City saved!');
+      this.updateWindowTitle(result.filePath);
+    } else if (result?.needsDialog) {
+      // No current save path, show Save As dialog
+      await this.saveCityAs();
+    } else if (result?.error) {
+      alert('Failed to save: ' + result.error);
+    } else {
+      // Fallback to localStorage if electronAPI not available
+      localStorage.setItem('claudeCity_save', jsonData);
+      this.showSaveNotification('City saved to local storage!');
+    }
   }
 
-  // Load city from localStorage
-  loadCity() {
-    const saveStr = localStorage.getItem('claudeCity_save');
-    if (!saveStr) {
-      alert('No saved city found.');
+  // Load city from file
+  async loadCity() {
+    const filePath = await window.electronAPI?.showOpenDialog();
+
+    if (!filePath) {
+      return; // User cancelled
+    }
+
+    const result = await window.electronAPI?.loadFile(filePath);
+
+    if (!result?.success) {
+      alert('Failed to load city: ' + (result?.error || 'Unknown error'));
       return;
     }
 
     try {
-      const saveData = JSON.parse(saveStr);
+      const saveData = JSON.parse(result.data);
 
       this.simulation.pause();
       this.city = City.deserialize(saveData.city);
@@ -410,18 +436,77 @@ class Game {
       this.minimap.city = this.city;
       this.simulation.start();
       this.updateUI();
-      alert('City loaded!');
+      this.updateWindowTitle(filePath);
+      this.showSaveNotification('City loaded!');
     } catch (e) {
       alert('Failed to load city: ' + e.message);
     }
   }
 
-  // Save city as (prompt for name - simplified)
-  saveCityAs() {
-    const name = prompt('Enter city name:', 'My City');
-    if (name) {
-      this.saveCity();
+  // Save city as (always shows dialog)
+  async saveCityAs() {
+    const filePath = await window.electronAPI?.showSaveDialog();
+
+    if (!filePath) {
+      return; // User cancelled
     }
+
+    const saveData = {
+      version: 1,
+      timestamp: Date.now(),
+      city: this.city.serialize(),
+      budget: this.budget.serialize(),
+      simulation: this.simulation.serialize()
+    };
+
+    const jsonData = JSON.stringify(saveData, null, 2);
+    const result = await window.electronAPI?.saveFile(filePath, jsonData);
+
+    if (result?.success) {
+      this.showSaveNotification('City saved!');
+      this.updateWindowTitle(filePath);
+    } else {
+      alert('Failed to save: ' + (result?.error || 'Unknown error'));
+    }
+  }
+
+  // Update window title with current file name
+  updateWindowTitle(filePath) {
+    if (filePath) {
+      const fileName = filePath.split(/[\\/]/).pop(); // Get filename from path
+      document.querySelector('.win95-title-bar-text').textContent = `ClaudeCity - ${fileName}`;
+    } else {
+      document.querySelector('.win95-title-bar-text').textContent = 'ClaudeCity';
+    }
+  }
+
+  // Show a brief save notification
+  showSaveNotification(message) {
+    // Remove existing notification
+    const existing = document.getElementById('save-notification');
+    if (existing) existing.remove();
+
+    const notification = document.createElement('div');
+    notification.id = 'save-notification';
+    notification.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #C0C0C0;
+      border: 2px solid;
+      border-color: #FFFFFF #808080 #808080 #FFFFFF;
+      padding: 15px 30px;
+      font-family: 'MS Sans Serif', Arial, sans-serif;
+      font-size: 12px;
+      z-index: 10000;
+      box-shadow: 2px 2px 0 #000;
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+
+    // Auto-remove after 1.5 seconds
+    setTimeout(() => notification.remove(), 1500);
   }
 
   // Toggle auto bulldoze
