@@ -1,0 +1,323 @@
+4x4 Land Grid
+Everything in this game is divided into calculations performed in 4x4 Zones. Understanding how the unseen divisions in your city work will influence every other Game Mechanic. The grid is broken into 4x4 Zones, checkerboard style.
+
+Keeping this in mind, it will have effects on all the Game Mechanics to follow, as the Zones will calculate their value, depending on what is in that Zone, and how many 4x4 Zones they touch.
+
+
+
+Land Value Mechanics
+This is the most important thing to understand and know how to use to your advantage, as the higher the Land Value, the better result in Zone development you will experience. Land value is calculated by taking into account the following factors:
+
+Water
+Forest
+Park
+Presents
+Center of City
+Water/Forest/Park
+Any 4x4 Zone that contains these tiles, will experience an increase in Land Value, and any 4x4 Zone touching these 4x4 Zones will experience a boost in Land Value as well (as this example shows).
+
+Presents
+In the NES prototype, Presents give no increase in Land Value. It is yet to be determined if this is a bug in the code or if the increase in Land Value was a feature added to the SNES version.
+
+Center of City
+The closer to the City Center you get, the higher the Land value on average. The Land values will shift from where the heaviest concentration of buildings are (ie the "Center"), meaning the Center moves during the lifespan of your City. It will eventually settle to a spot near the middle of the map, as the area fills in to capacity. You can use this to your advantage, as you can shift Land Values around to help develop Zones in an area where the other Land Value factors may not be having as large of an effect.
+
+Residential/Commercial/Industrial Zones
+Here are how the three main Zones operate.
+
+Influences
+
+Residential
+
+Commercial
+
+Industrial
+
+Power Requirements
+
+Required
+
+Required
+
+Required
+
+Transit Requirements
+
+Special Rules
+
+Access
+
+Access
+
+RCI Meter
+
+Growth
+
+Growth
+
+Growth
+
+Land Value
+
+Growth AND Class
+
+Size Limit AND Class
+
+Ignored
+
+Pollution
+
+Growth AND Class
+
+Class
+
+Ignored
+
+Population Density
+
+Need to reach Class rating
+
+Ignored
+
+Ignored
+
+
+Power Requirements
+All zones require power in order to grow.
+
+Transit Requirements
+Commercial and Industrial Zones require just having access to a Rail or Road to meet their needs to being growing. Residential Zones require a more involved process to meet their requirements to spur growth, as follows:
+
+Residential Requirements
+
+They will check to see if there is a Rail or Road in contact with the Zone.
+They will follow the Transit (Roads and/or Rails, switching between without any penalty) to see if they can reach a valid destination. Paths chosen when looking for a valid destination are random, and if it reached a "dead end", it stops looking at that point.
+The travel must be at least one tile from the starting spot to reach a valid destination.
+Residential Zones search for transit starting on the top-left tile of the R-Zone, checking the tile north of that, and moving clockwise.
+A list of valid destinations for Residential Zones to travel to includes:
+
+Commercial Zones
+Industrial Zones
+Police Departments
+Fire Departments
+Open Stadiums
+Coal Power Plants
+Sea Ports
+Airports
+Presents
+A list of non-valid destinations for Residential Zones to travel to includes:
+
+Non-building tiles (Parks, for example)
+Residential Zones
+Nuclear Power Plants
+Domed Stadiums (Not in the prototype game.)
+RCI Meter, Land Value, Pollution, and Population Density
+Zones grow in two ways: by Class and by Level.
+
+Class is a distinction between Low, Mid, Upper, and High. Class has almost no gameplay effect. It is largely used as an indicator of how much Land Value and how little Pollution was in the center tile when it last changed. However, Residential and Commercial Zones can only become a TOP only when two adjacent zones are High. This is the only gameplay effect of class.
+
+Level is used to determine the population of a Zone. Zone Levels go up and down depending on various factors:
+
+Residential Zones grow by taking into account Land Values, Pollution, and the RCI Meter.
+Commercial Zones use Land Value as a limit to their size, and the RCI Meter for growth.
+Industrial Zones grow purely based on the RCI Meter.
+Residential and Commercial Zones build up in different classes based on Land Value factors, then subtracting Pollution factors from the score. Use the table to work out what class they will become:
+
+Class
+
+Land Value
+
+Low
+
+0-29
+
+Mid
+
+30-79
+
+Upper
+
+80-149
+
+High
+
+150-250
+
+NOTE: Industrial Zones pick randomly between Low and High Classes whenever they grow or shrink. As for Levels, each Zone type is unique in how they grow.
+
+
+Residential Zones
+These start growth in the small housing stage, with each house holding 20 citizens. When it has a full allotment of 8 small houses (160 citizens), it can then grow into an R-1 (320), provided conditions are met. Further growth lets it get to R-2, R-3, and R-4 (800). If there are two adjacent R-4 High, then the two might even combine into an RTOP (1920). Residential Zones require a Population Density of 66 or greater in order to reach R-1 size. Outside of that, they have no further limits on the way to R-4 or even RTOP. This density can be achieved by placing other Zones next to it, with Commercial Zones being a good choice in getting it to start.
+
+The growth formula uses the R of RCI Meter, Land Value, and Pollution. It is possible to beat lacking demands by using a very high Land Value, and areas of low Land Value can still have growing Residential Zones with very high demands. Pollution has a negative effect on growth, and since it also reduces Land Value, this means Pollution is doubly bad for Residential Zones. Keep them away from pollution!
+
+Commercial Zones
+These go straight to C-1 (160 citizens) without that small housing stage like with Residential Zones. They can grow to C-2 (320), C-3 (480), C-4 (640), and finally C-5 (800). With adjacent C-5 High, it is possible to get a CTOP (1960). The maximum size a Commercial Zone can reach is based purely on Land Value. They need 160 Land Value to reach TOP. Since you need only 150 Land Value to get a High, you'll only fail this requirement if there is enough pollution to reduce the class to Upper (or worse).
+
+As for growth, it's based on the C of RCI Meter. There also is a hidden Com Rate map stat that affects it, in chunky 8x8 blocks, but generally, the closer to the city center, the better the Commercial Zone can withstand poor demands. A maxed out C of RCI Meter will always have growing Commercial Zones, no matter what that hidden Com_Rate stat says. Pollution only affects the Commercial Zone class. Since Pollution also affects Land Value, it's a sort of a double punch against the Commercial Zones class. Since lacking Land Value does not affect growth, you can build a C-5 or CTOP, then trash the local Land Value with I-Zones, and the well developed C-Zone will retain its population. Just don't lose power, transportation, or demands, and they'll stay as a CTOP rating permanently.
+
+Industrial Zones
+These start growing to I-1 (160 citizens), then move to I-2 (320), I-3 (480), and finally max out at I-4 (640). They also produce their full amount of pollution starting at the I-1 Level.
+
+As for growth, the only thing that affects them is the I of RCI Meter. Since they produce Pollution, Land Value tends to drop to nothing around them, meaning it could not have an effect. The lax requirements mean it is easy to place them and expect their success, though make sure you don't ruin nearby Residential Zones (or still growing Commercial Zones). As for their Class, it is determined randomly every time they grow or shrink, but this only affects their appearance, it has no other effect.
+
+Police and Fire Departments
+The Police and Fire Departments will always give some coverage in their respective areas of function, but with each f the following conditions met, the effective coverage provided will double in quality/size of area:
+
+Giving the Zone access to the power grid.
+Touching a rail/road to the Zone.
+If the Zone is a Fire/Police headquarters (ie a Present)
+There will be times where you may not want them to have a rail/road access (like in the middle of a Donut Block), but meeting each of these requirements means you will have less need to build so many for the Police (Fire is only required with Fire being on map, so you can conceivably get by with only 1 of these in the City, which helps avoid the Alerts up top in your HUD).
+
+Transit (Roads and Rails)
+Roads are cheaper, both in up-front costs and maintenance. Rails cost twice as much to both build and to maintain. Citizens do not differentiate between the two types of Transit tiles, meaning that even if you put tiles in an alternating fashion, the Citizens can still travel along the entire length without trouble.
+
+A Road or Rail crossover tile (with the other transit tile type) is functionally identical to a plain Rail tile. A power line crossover allows the road or rail to act like a tile that can take power and stops deterioration. Appearances of these crossovers don't actually matter, but it can look ugly depending on the order you build things. Roads and Rails require yearly maintenance, including Road or Rails built over the water, with cost depending on difficulty. Without 100% funding, there is a chance for each existing tile to deteriorate, but power line crossovers on transit tiles stop this requirement. Theoretically, you could do Power Lines over Rail in the entire city and cut funding to zero without any Rail deterioration. Needs to be confirmed.
+
+Game Difficulty
+
+Estimated Maintenance Cost/Road
+
+Formula Maintenance Cost/Road
+
+NOTES
+
+Easy
+
+$0.7
+
+179/256
+
+◦ One Rail is equal to Two Roads.
+◦ Estimated Maintenance Cost is accurate within 1% of the Formula Maintenance Cost, so it makes for a very accurate estimation tool.
+
+Normal
+
+$0.9
+
+230/256
+
+Hard
+
+$1.2
+
+307/256
+
+NOTE: After totaling the costs, any fraction of a dollar will be rounded down.
+
+
+Five types of buildings desire some form of transportation, see the respective entries in this section for what they need/use Transit for:
+
+Residential Zones
+Commercial Zones
+Industrial Zones
+Police Departments
+Fire Departments
+Pollution Mechanics
+The following are the sources of Pollution in the game, and how much of an effect they have on Land Values. I have changed several areas here, as the NES prototype seemed to react much differently than other versions, in that Roads do not seem to create Pollution or Crime.
+
+Source
+
+Effect
+
+Road traffic (light)
+
+0 (10)
+
+Road traffic (heavy)
+
+0 (25)
+
+Industrial Zone (developed)
+
+50
+
+Coal Power
+
+60
+
+Seaport
+
+60
+
+Airport
+
+60
+
+Fire
+
+60
+
+Nuclear Waste
+
+250
+
+Each existing tile adds its "value" of pollution to the 2x2 squares they reside in. This is then diffused twice to spread the pollution to surrounding tiles. Each tile of building counts as a separate tile that adds pollution; An Industrial Zone has 9 tiles (each producing pollution), so 200 goes in one 2x2, 100 goes in two 2x2, and 50 goes in one 2x2, as an example. This has a side effect when Zone stacking these buildings, as it actually reduces pollution. Since Zone stacking can be done using the Debug Mode on the NES prototype, I left this in.
+
+A single tile of nuclear waste sets the temporary value for pollution on the 2x2 square to 250, the highest value allowed by the game engine.
+
+The diffusion for Pollution is to add 1/4 (25%) of the current value to itself, and to adjacent tiles. The diffusion formula is applied twice. This effectively means that 5/16 (31.25%) of the original value is used on the same 2x2 square, 1/8 (12.5%) on the eight surrounding 2x2 squares, and 1/16 (6.25%) on the four 2x2 squares just two spots north, south, east, and west of the original 2x2 squares.
+
+Anything diffused off of the map does not get diffused back onto the map, but this only has the effect of anything on the edge of the map will only pollute its own 2x2 square by 4/16 (25%) of the original value, and anything on a corner will pollute itself by 3/16 (18.75%) of the original value. As far as benefit to nearby zones go, this has no effect, as the only zone that could benefit is the one making the pollution in the first place.
+
+Power Mechanics
+Residential, Commercial, and Industrial Zones REQUIRE power to grow, and they will likely shrink without it. Police Departments/Headquarters and Fire Departments/Headquarters coverage will function without power, but does so with less effectiveness (Double check this. Could have been because of lack of Transit) and you still have to pay maintenance for these, even without power connected to them.
+
+The following Zones require no power to function at 100% capacity:
+
+Stadium
+Coal Power
+Nuclear Power
+All Presents (except for the Police/Fire Headquarters)
+Airport (Needs to be confirmed on the NES prototype.)
+Seaport (Needs to be confirmed on the NES prototype.)
+NOTE: The power provided by the Power Plant Zones will be added to your total Zones powered in your city, even if they are not connected directly into the grid (only 1 Power Plant must be connected into your city's power grid).
+
+Game Difficulty Mechanics
+The amount of cash you start with when beginning a new city is very obvious, as the game will tell you outright how much money you're getting when selecting difficulty ($20,000 - Easy, $10,000 Normal, $5,000 - Hard). However, difficulty also has effects on other aspects of SimCity, making various changes in mechanics.
+
+Unfortunately, in the NES prototype, the ability to choose a level is either disabled on purpose or was never hooked up. You can choose Medium or Hard, but you always start off with $20,000, leading me to believe that you can only play Easy on the NES prototype.
+
+Disasters
+Easy has a limited list of naturally occurring Disasters, and those are Plane Crashes and Shipwrecks. Medium and Hard difficulties can have any and all Disasters happen (including the dreaded Nuclear Meltdown!), with Normal having Disasters less frequently than Hard. Exact mechanics on how frequently the Disasters occur on these settings is not 100% understood at present.
+
+Easy - Almost never
+Normal - Sometimes
+Hard – Frequently
+NOTE: Scenarios are set to Easy, but they have Disasters that occur at set intervals.
+
+Taxes
+This Percentage listing indicates how much of your Tax haul the game actually gives you. For example, say you would take in $2800 in taxes for the year, Easy would yield a return of $2800, but on Normal the return is only $2400, while on Hard the total gained is a mere $1600. The game calculates based on the following:
+
+Easy - 100%
+Normal - 85.7%
+Hard - 57.1%
+As if the reduced money wasn't enough, the game treats your Tax Rate as being higher than it actually is when determining the RCI Meter demands. 7% Taxes on Easy is considered "neutral" to the RCI Meter, so to maintain that on higher difficulties, you would need 6% on Medium, or 5% on Hard. Keeping 7% Taxes on Hard harms your RCI Meter much like 9% taxes on Easy, which is a somewhat bad strain on demands.
+
+Industrial Zone demand adjustments
+Counting Taxes as if they were higher than they really are is bad, but the I part of the RCI Meter is further adjusted in regards to your Game Difficulty setting. Easy and Normal makes things work a bit easier in your favor, while hard suffers a slight decrease.
+
+Easy - x1.2
+Normal - x1.1
+Hard - x0.98
+Tax Mechanics
+Taxes are gathered based on the following criteria:
+
+A number that is tallied every week (four weeks per month, 48 per year in total) based on the Tax rate that you have set at that time. The number is not visible in the game and is tallied off-screen.
+Population total (at the end of the year).
+Average Land Value in your City (at the end of the year).
+The total gained from these criteria is then adjusted by the Game Difficulty setting. Game Difficulty is discussed in the Game Difficulty Mechanics section. But again, on the NES prototype this seems to be disabled and defaults to Easy no matter what.
+
+ Previous: Voter ComplaintsNext: Scenarios 
+GameFAQsfacebook.com/GFAQstwitter.com/GameFAQsHelp / Contact UsChange Colors 
+gamespot.commetacritic.comfandom.comfanatical.com
+
+SitemapPartnershipsCareersTerms of UseDigital Services Act
+
+Privacy PolicyDo Not Sell My Personal InformationReport Ad
+
+© 2026 FANDOM, INC. ALL RIGHTS RESERVED.
+
+This website uses cookies to enhance user experience and to analyze performance and traffic on our website. We also share information about your use of our site with our social media, advertising and analytics partners.Privacy Policy
+Do Not Sell My Personal Information Accept Cookies
+

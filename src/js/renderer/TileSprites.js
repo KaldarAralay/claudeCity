@@ -258,9 +258,19 @@ class TileSprites {
     ctx.setLineDash([]);
   }
 
-  // Draw a building tile based on type and level
+  // Draw a building tile based on type, level, and class
   // Residential: levels 1-9 (R-TOP), Commercial: levels 1-5 (C-TOP), Industrial: levels 1-4 (I-4)
-  drawBuilding(ctx, type, level, x, y, width, height, isMainTile) {
+  // Class affects appearance: Low (shabby), Mid (normal), Upper (nice), High (luxury)
+  drawBuilding(ctx, type, level, zoneClass, x, y, width, height, isMainTile) {
+    // Class-based color adjustments
+    const classColorShift = {
+      'low': -20,      // Darker/dingier colors
+      'mid': 0,        // Normal colors
+      'upper': 10,     // Slightly brighter
+      'high': 20       // Brightest/most vibrant
+    };
+    const colorShift = classColorShift[zoneClass] || 0;
+
     // Extended color palettes for each zone type
     const colors = {
       // Residential: 10 colors (0 = zone, 1-9 = buildings)
@@ -296,16 +306,29 @@ class TileSprites {
     };
 
     const colorSet = colors[type] || colors.residential;
-    const buildingColor = colorSet[Math.min(level, colorSet.length - 1)];
+    let buildingColor = colorSet[Math.min(level, colorSet.length - 1)];
+
+    // Adjust color based on class
+    buildingColor = this.adjustColorBrightness(buildingColor, colorShift);
 
     // Building base
     ctx.fillStyle = buildingColor;
     ctx.fillRect(1, 1, this.tileSize - 2, this.tileSize - 2);
 
-    // Building details based on level and type
+    // Building details based on level, type, and class
     if (level >= 1) {
-      // Windows - more and smaller for higher levels
-      ctx.fillStyle = (type === 'industrial') ? '#444' : '#FFE';
+      // Windows - style varies by class
+      let windowColor;
+      if (type === 'industrial') {
+        windowColor = '#444';
+      } else if (zoneClass === 'high' || zoneClass === 'upper') {
+        windowColor = '#FFFFC0'; // Warm golden light for high class
+      } else if (zoneClass === 'low') {
+        windowColor = '#DDD'; // Dimmer for low class
+      } else {
+        windowColor = '#FFE';
+      }
+      ctx.fillStyle = windowColor;
 
       let windowSize, gap;
       if (level <= 3) {
@@ -330,35 +353,35 @@ class TileSprites {
     // Building height indicator (roof/top details)
     if (type === 'residential') {
       if (level >= 7) {
-        // High-rise roof
-        ctx.fillStyle = '#222';
+        // High-rise roof - color varies by class
+        ctx.fillStyle = (zoneClass === 'high') ? '#111' : '#222';
         ctx.fillRect(1, 1, this.tileSize - 2, 2);
         // Antenna for level 9
         if (level >= 9) {
-          ctx.fillStyle = '#666';
+          ctx.fillStyle = (zoneClass === 'high') ? '#AAA' : '#666';
           ctx.fillRect(this.tileSize / 2 - 1, 0, 2, 3);
         }
       } else if (level >= 4) {
-        // Apartment roof
         ctx.fillStyle = '#444';
         ctx.fillRect(1, 1, this.tileSize - 2, 1);
       }
     } else if (type === 'commercial') {
       if (level >= 4) {
         // Office building top
-        ctx.fillStyle = '#222';
+        ctx.fillStyle = (zoneClass === 'high') ? '#000' : '#222';
         ctx.fillRect(1, 1, this.tileSize - 2, 2);
         if (level >= 5) {
-          // Spire for C-TOP
-          ctx.fillStyle = '#888';
-          ctx.fillRect(this.tileSize / 2 - 1, 0, 2, 4);
+          // Spire for C-TOP - taller for high class
+          ctx.fillStyle = (zoneClass === 'high') ? '#CCC' : '#888';
+          const spireHeight = (zoneClass === 'high') ? 5 : 4;
+          ctx.fillRect(this.tileSize / 2 - 1, 0, 2, spireHeight);
         }
       } else if (level >= 2) {
         ctx.fillStyle = '#333';
         ctx.fillRect(1, 1, this.tileSize - 2, 1);
       }
     } else if (type === 'industrial') {
-      // Smokestacks for industrial
+      // Smokestacks for industrial (class is random for industrial)
       if (level >= 2) {
         ctx.fillStyle = '#333';
         const stackCount = Math.min(level, 3);
@@ -373,6 +396,25 @@ class TileSprites {
         }
       }
     }
+
+    // Class indicator border for high-class buildings
+    if ((zoneClass === 'high' || zoneClass === 'upper') && type !== 'industrial') {
+      ctx.strokeStyle = (zoneClass === 'high') ? '#FFD700' : '#C0C0C0';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(0.5, 0.5, this.tileSize - 1, this.tileSize - 1);
+    }
+  }
+
+  // Helper: Adjust color brightness
+  adjustColorBrightness(hex, amount) {
+    const num = parseInt(hex.slice(1), 16);
+    let r = (num >> 16) + amount;
+    let g = ((num >> 8) & 0x00FF) + amount;
+    let b = (num & 0x0000FF) + amount;
+    r = Math.max(0, Math.min(255, r));
+    g = Math.max(0, Math.min(255, g));
+    b = Math.max(0, Math.min(255, b));
+    return '#' + (0x1000000 + (r << 16) + (g << 8) + b).toString(16).slice(1);
   }
 
   // Draw special building tile
@@ -469,6 +511,7 @@ class TileSprites {
         ctx,
         tile.zoneType,
         tile.level,  // Use level instead of density for accurate zone progression
+        tile.zoneClass, // Pass zone class for appearance variations
         tile.x,
         tile.y,
         tile.buildingWidth,

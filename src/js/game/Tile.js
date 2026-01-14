@@ -8,6 +8,7 @@ class Tile {
     this.zoneType = null;         // For zone tiles: 'residential', 'commercial', 'industrial'
     this.level = 0;               // Zone development level (R: 0-9, C: 0-5, I: 0-4)
     this.density = 0;             // Legacy alias for level (for backwards compatibility)
+    this.zoneClass = null;        // Zone class: 'low', 'mid', 'upper', 'high' (based on land value)
     this.powered = false;         // Has power connection
     this.roadAccess = false;      // Has road connection
     this.buildingId = null;       // For multi-tile buildings, reference to main tile
@@ -141,6 +142,7 @@ class Tile {
     this.zoneType = null;
     this.level = 0;
     this.density = 0;
+    this.zoneClass = null;
     this.powered = false;
     this.roadAccess = false;
     this.buildingId = null;
@@ -257,6 +259,51 @@ class Tile {
     return `${prefix}-${this.level}`;
   }
 
+  // Calculate zone class based on land value (minus pollution effects)
+  // Classes: Low (0-29), Mid (30-79), Upper (80-149), High (150-250)
+  calculateZoneClass() {
+    // Effective land value = land value - pollution penalty
+    const effectiveLandValue = Math.max(0, this.landValue - Math.floor(this.pollution * 0.5));
+
+    if (effectiveLandValue >= LAND_VALUE_THRESHOLDS.HIGH) {
+      return LAND_VALUE_CLASS.HIGH;
+    } else if (effectiveLandValue >= LAND_VALUE_THRESHOLDS.UPPER) {
+      return LAND_VALUE_CLASS.UPPER;
+    } else if (effectiveLandValue >= LAND_VALUE_THRESHOLDS.MID) {
+      return LAND_VALUE_CLASS.MID;
+    } else {
+      return LAND_VALUE_CLASS.LOW;
+    }
+  }
+
+  // Update zone class (called when zone develops or land value changes)
+  updateZoneClass() {
+    if (this.isBuilding() || this.isZone()) {
+      // Industrial zones randomly pick between Low and High (per game mechanics)
+      if (this.isIndustrial()) {
+        this.zoneClass = Math.random() < 0.5 ? LAND_VALUE_CLASS.LOW : LAND_VALUE_CLASS.HIGH;
+      } else {
+        this.zoneClass = this.calculateZoneClass();
+      }
+    }
+  }
+
+  // Get effective land value (land value minus pollution effects)
+  getEffectiveLandValue() {
+    return Math.max(0, this.landValue - Math.floor(this.pollution * 0.5));
+  }
+
+  // Check if this zone is High class (needed for TOP development)
+  isHighClass() {
+    return this.zoneClass === LAND_VALUE_CLASS.HIGH;
+  }
+
+  // Get zone class label for display
+  getClassLabel() {
+    if (!this.zoneClass) return '';
+    return this.zoneClass.charAt(0).toUpperCase() + this.zoneClass.slice(1);
+  }
+
   // Serialize for save
   serialize() {
     return {
@@ -266,6 +313,7 @@ class Tile {
       zoneType: this.zoneType,
       level: this.level,
       density: this.density,
+      zoneClass: this.zoneClass,
       powered: this.powered,
       roadAccess: this.roadAccess,
       buildingId: this.buildingId,

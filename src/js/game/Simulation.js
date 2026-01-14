@@ -223,6 +223,7 @@ class Simulation {
   }
 
   // Update zone development
+  // Land value affects: R growth + class, C size limit + class, I ignores land value
   updateZoneDevelopment() {
     for (let y = 0; y < this.city.height; y++) {
       for (let x = 0; x < this.city.width; x++) {
@@ -243,11 +244,16 @@ class Simulation {
             }
           }
         } else if (tile.isBuilding()) {
-          // Developed zone - try to increase density
+          // Developed zone - try to increase level
           if (canDevelop) {
             const demand = this.getDemandForZone(tile.zoneType);
-            if (demand > 0 && Math.random() < demand * 0.05) {
-              this.increaseZoneDensity(x, y);
+            const growthChance = this.calculateGrowthChance(tile, demand);
+
+            if (Math.random() < growthChance) {
+              // Check if zone can grow (land value limits for commercial, TOP requirements)
+              if (this.canZoneGrow(tile, x, y)) {
+                this.increaseZoneDensity(x, y);
+              }
             }
           } else if (!tile.powered) {
             // Depopulate unpowered zones
@@ -258,6 +264,90 @@ class Simulation {
         }
       }
     }
+  }
+
+  // Calculate growth chance based on zone type, demand, and land value
+  calculateGrowthChance(tile, demand) {
+    if (demand <= 0) return 0;
+
+    let baseChance = demand * 0.05;
+
+    if (tile.isResidential()) {
+      // Residential: Land value boosts growth, pollution hurts
+      const effectiveLandValue = tile.getEffectiveLandValue();
+      const landValueBonus = effectiveLandValue / 255 * 0.05; // Up to +5% from land value
+      baseChance += landValueBonus;
+    } else if (tile.isCommercial()) {
+      // Commercial: Growth based on demand only, land value affects SIZE limit
+      // (handled in canZoneGrow)
+    } else if (tile.isIndustrial()) {
+      // Industrial: Growth purely from demand
+      // Slightly faster growth rate for industry
+      baseChance *= 1.2;
+    }
+
+    return Math.min(0.2, baseChance); // Cap at 20% per tick
+  }
+
+  // Check if a zone can grow to the next level
+  canZoneGrow(tile, x, y) {
+    if (tile.isMaxLevel()) return false;
+
+    const nextLevel = tile.level + 1;
+    const maxLevel = tile.getMaxLevel();
+
+    // Check if trying to reach TOP level (max)
+    if (nextLevel >= maxLevel) {
+      // TOP requires two adjacent zones of the same type at max-1 level with High class
+      return this.canReachTopLevel(tile, x, y);
+    }
+
+    // Commercial zones have land value requirements for growth
+    if (tile.isCommercial()) {
+      const requiredLandValue = COMMERCIAL_LAND_VALUE_REQUIREMENTS[nextLevel] || 0;
+      if (tile.getEffectiveLandValue() < requiredLandValue) {
+        return false; // Not enough land value to grow
+      }
+    }
+
+    return true;
+  }
+
+  // Check if zone can reach TOP level (requires adjacent High class zones)
+  canReachTopLevel(tile, x, y) {
+    // Per game mechanics: R-TOP and C-TOP require two adjacent zones at max-1 level with High class
+    // Industrial zones don't have this requirement
+    if (tile.isIndustrial()) return true;
+
+    const maxLevel = tile.getMaxLevel();
+    const requiredLevel = maxLevel - 1; // Need to be at one below TOP
+
+    // Check if current zone is at the required level
+    if (tile.level !== requiredLevel) return false;
+
+    // Must be High class to reach TOP
+    if (!tile.isHighClass()) return false;
+
+    // Check for adjacent zone of same type at same level with High class
+    const adjacentOffsets = [
+      { dx: -3, dy: 0 },  // Left (3x3 zone)
+      { dx: 3, dy: 0 },   // Right
+      { dx: 0, dy: -3 },  // Up
+      { dx: 0, dy: 3 }    // Down
+    ];
+
+    for (const offset of adjacentOffsets) {
+      const adjTile = this.city.getTile(x + offset.dx, y + offset.dy);
+      if (adjTile &&
+          adjTile.isMainTile &&
+          adjTile.zoneType === tile.zoneType &&
+          adjTile.level === requiredLevel &&
+          adjTile.isHighClass()) {
+        return true; // Found a valid adjacent zone
+      }
+    }
+
+    return false; // No valid adjacent High class zone found
   }
 
   // Get demand for zone type
@@ -283,9 +373,10 @@ class Simulation {
           tile.develop();
           tile.level = 1;
           tile.density = 1;
-          // Only main tile tracks population/jobs
+          // Only main tile tracks population/jobs and class
           if (tile.isMainTile) {
             tile.updateStats();
+            tile.updateZoneClass(); // Set initial class based on land value
           }
         }
       }
@@ -306,9 +397,10 @@ class Simulation {
         const tile = this.city.getTile(x + dx, y + dy);
         if (tile) {
           tile.increaseLevel();
-          // Only main tile tracks population/jobs
+          // Only main tile tracks population/jobs and class
           if (tile.isMainTile) {
             tile.updateStats();
+            tile.updateZoneClass(); // Update class when level changes
           }
         }
       }
@@ -326,9 +418,10 @@ class Simulation {
         const tile = this.city.getTile(x + dx, y + dy);
         if (tile && tile.level > 0) {
           tile.decreaseLevel();
-          // Only main tile tracks population/jobs
+          // Only main tile tracks population/jobs and class
           if (tile.isMainTile) {
             tile.updateStats();
+            tile.updateZoneClass(); // Update class when level changes
           }
         }
       }
@@ -493,59 +586,112 @@ class Simulation {
     }
   }
 
-  // Update land values
+  // Update land values based on NES SimCity mechanics
+  // Land value is boosted by: Water, Forest, Parks, City Center proximity
+  // Pollution reduces EFFECTIVE land value (for class calculation) but not stored value
   updateLandValues() {
-    // Simple land value model based on distance from services, parks, and pollution
-    const services = this.city.getServiceBuildings();
-
-    // Find all parks for land value bonus
-    const parks = [];
-    for (let y = 0; y < this.city.height; y++) {
-      for (let x = 0; x < this.city.width; x++) {
-        if (this.city.tiles[y][x].isPark()) {
-          parks.push({ x, y });
-        }
-      }
-    }
+    // First, find the city center (weighted average of all developed zones)
+    let centerX = this.city.width / 2;
+    let centerY = this.city.height / 2;
+    let totalWeight = 0;
+    let weightedX = 0;
+    let weightedY = 0;
 
     for (let y = 0; y < this.city.height; y++) {
       for (let x = 0; x < this.city.width; x++) {
         const tile = this.city.tiles[y][x];
+        if (tile.isBuilding()) {
+          const weight = tile.level + 1;
+          weightedX += x * weight;
+          weightedY += y * weight;
+          totalWeight += weight;
+        }
+      }
+    }
 
-        // Base land value
-        let value = 50;
+    if (totalWeight > 0) {
+      centerX = weightedX / totalWeight;
+      centerY = weightedY / totalWeight;
+    }
 
-        // Increase near services
+    // Store city center for other calculations
+    this.cityCenter = { x: centerX, y: centerY };
+
+    // Calculate max distance from center for normalization
+    const maxDist = Math.sqrt(
+      Math.pow(this.city.width / 2, 2) + Math.pow(this.city.height / 2, 2)
+    );
+
+    // Calculate land values for each tile
+    for (let y = 0; y < this.city.height; y++) {
+      for (let x = 0; x < this.city.width; x++) {
+        const tile = this.city.tiles[y][x];
+        let value = 30; // Base land value
+
+        // Check nearby tiles for terrain features (within radius 4)
+        for (let dy = -4; dy <= 4; dy++) {
+          for (let dx = -4; dx <= 4; dx++) {
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist > 4) continue;
+
+            const nearbyTile = this.city.getTile(x + dx, y + dy);
+            if (!nearbyTile) continue;
+
+            const distFactor = 1 - (dist / 5); // Falloff with distance
+
+            // Water boost (highest)
+            if (nearbyTile.isWater()) {
+              if (dist <= 1) {
+                value += LAND_VALUE_BOOSTS.WATER; // Direct adjacency
+              } else {
+                value += LAND_VALUE_BOOSTS.WATER_ADJACENT * distFactor;
+              }
+            }
+
+            // Forest boost
+            if (nearbyTile.isForest()) {
+              if (dist <= 1) {
+                value += LAND_VALUE_BOOSTS.FOREST;
+              } else {
+                value += LAND_VALUE_BOOSTS.FOREST_ADJACENT * distFactor;
+              }
+            }
+
+            // Park boost (very valuable)
+            if (nearbyTile.isPark()) {
+              if (dist <= 1) {
+                value += LAND_VALUE_BOOSTS.PARK;
+              } else {
+                value += LAND_VALUE_BOOSTS.PARK_ADJACENT * distFactor;
+              }
+            }
+          }
+        }
+
+        // City center proximity boost
+        const distToCenter = Math.sqrt(
+          Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2)
+        );
+        const centerBoost = LAND_VALUE_BOOSTS.CITY_CENTER_MAX *
+          (1 - distToCenter / maxDist);
+        value += Math.max(0, centerBoost);
+
+        // Services boost (police/fire stations indicate good neighborhood)
+        const services = this.city.getServiceBuildings();
         services.forEach(service => {
           const dist = Math.sqrt((x - service.x) ** 2 + (y - service.y) ** 2);
           if (dist < service.radius) {
-            value += (service.radius - dist) * 2;
+            value += (service.radius - dist) * 0.5;
           }
         });
 
-        // Increase near parks (radius 4)
-        parks.forEach(park => {
-          const dist = Math.sqrt((x - park.x) ** 2 + (y - park.y) ** 2);
-          if (dist < 4) {
-            value += (4 - dist) * 5;
-          }
-        });
-
-        // Decrease from pollution
-        value -= tile.pollution * 0.5;
-
-        // Water frontage increases value
-        const neighbors = [
-          this.city.getTile(x - 1, y),
-          this.city.getTile(x + 1, y),
-          this.city.getTile(x, y - 1),
-          this.city.getTile(x, y + 1)
-        ];
-        if (neighbors.some(n => n && n.isWater())) {
-          value += 20;
-        }
-
+        // Store the raw land value (pollution is factored in during class calculation)
         tile.landValue = Math.max(0, Math.min(255, Math.floor(value)));
+
+        // Update zone class if this is a zone
+        if (tile.isMainTile && (tile.isBuilding() || tile.isZone())) {
+          tile.updateZoneClass();
+        }
       }
     }
   }

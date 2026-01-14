@@ -174,6 +174,54 @@ const SERVICE_RADIUS = {
 // Legacy population lookup (now uses RESIDENTIAL_POPULATION)
 const POPULATION_PER_DENSITY = RESIDENTIAL_POPULATION;
 
+// Land Value Classes (based on NES SimCity mechanics)
+// Class determines building appearance and affects growth/limits
+const LAND_VALUE_CLASS = {
+  LOW: 'low',       // 0-29
+  MID: 'mid',       // 30-79
+  UPPER: 'upper',   // 80-149
+  HIGH: 'high'      // 150-250
+};
+
+// Land value thresholds for each class
+const LAND_VALUE_THRESHOLDS = {
+  LOW: 0,
+  MID: 30,
+  UPPER: 80,
+  HIGH: 150
+};
+
+// Land value boosts from terrain features
+const LAND_VALUE_BOOSTS = {
+  WATER: 15,           // Water tiles boost adjacent land value
+  FOREST: 10,          // Forest tiles boost land value
+  PARK: 20,            // Parks boost land value significantly
+  WATER_ADJACENT: 8,   // Bonus for being adjacent to water-containing zone
+  FOREST_ADJACENT: 5,  // Bonus for adjacent forest zones
+  PARK_ADJACENT: 10,   // Bonus for adjacent park zones
+  CITY_CENTER_MAX: 30  // Maximum boost from city center proximity
+};
+
+// Commercial zone land value requirements for growth
+// Commercial zones need this much land value to reach each level
+const COMMERCIAL_LAND_VALUE_REQUIREMENTS = {
+  1: 0,     // C-1: No requirement
+  2: 40,    // C-2: Need mid-range land value
+  3: 80,    // C-3: Need upper land value
+  4: 120,   // C-4: Need good land value
+  5: 160    // C-TOP: Need 160+ land value (High class)
+};
+
+// Pollution sources and their values (from guide)
+const POLLUTION_VALUES = {
+  INDUSTRIAL: 50,     // Per industrial zone
+  COAL_POWER: 60,     // Coal power plant
+  SEAPORT: 60,        // Seaport
+  AIRPORT: 60,        // Airport
+  FIRE: 60,           // Active fire
+  NUCLEAR_WASTE: 250  // Nuclear meltdown
+};
+
 // Colors for rendering
 const TILE_COLORS = {
   // Terrain
