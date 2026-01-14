@@ -259,149 +259,488 @@ class TileSprites {
   }
 
   // Draw a building tile based on type, level, and class
+  // SimCity Classic style with visible roofs, shadows, and recognizable shapes
   // Residential: levels 1-9 (R-TOP), Commercial: levels 1-5 (C-TOP), Industrial: levels 1-4 (I-4)
-  // Class affects appearance: Low (shabby), Mid (normal), Upper (nice), High (luxury)
   drawBuilding(ctx, type, level, zoneClass, x, y, width, height, isMainTile) {
+    const ts = this.tileSize;
+
     // Class-based color adjustments
     const classColorShift = {
-      'low': -20,      // Darker/dingier colors
-      'mid': 0,        // Normal colors
-      'upper': 10,     // Slightly brighter
-      'high': 20       // Brightest/most vibrant
+      'low': -15,
+      'mid': 0,
+      'upper': 8,
+      'high': 15
     };
     const colorShift = classColorShift[zoneClass] || 0;
 
-    // Extended color palettes for each zone type
-    const colors = {
-      // Residential: 10 colors (0 = zone, 1-9 = buildings)
-      residential: [
-        '#90EE90', // Level 0: Empty zone (light green)
-        '#7CCD7C', // Level 1: Small house
-        '#6BB86B', // Level 2: Houses
-        '#5AA35A', // Level 3: Dense houses
-        '#498E49', // Level 4: Small apartments
-        '#388038', // Level 5: Apartments
-        '#2B6B2B', // Level 6: Large apartments
-        '#1E561E', // Level 7: High-rise
-        '#124112', // Level 8: Tower
-        '#082C08'  // Level 9: R-TOP (maximum)
-      ],
-      // Commercial: 6 colors (0 = zone, 1-5 = buildings)
-      commercial: [
-        '#87CEEB', // Level 0: Empty zone
-        '#6AB8DC', // Level 1: Small shop
-        '#4D9FCB', // Level 2: Shops
-        '#3584B8', // Level 3: Store
-        '#2068A0', // Level 4: Large store
-        '#104878'  // Level 5: C-TOP (office tower)
-      ],
-      // Industrial: 5 colors (0 = zone, 1-4 = buildings)
-      industrial: [
-        '#FFD700', // Level 0: Empty zone
-        '#E6C200', // Level 1: Small factory
-        '#C9A800', // Level 2: Factory
-        '#A68A00', // Level 3: Large factory
-        '#7A6500'  // Level 4: I-4 (industrial complex)
-      ]
-    };
+    // Draw grass base first
+    ctx.fillStyle = '#5A8A3A';
+    ctx.fillRect(0, 0, ts, ts);
 
-    const colorSet = colors[type] || colors.residential;
-    let buildingColor = colorSet[Math.min(level, colorSet.length - 1)];
+    // Add grass texture
+    ctx.fillStyle = '#6A9A4A';
+    ctx.fillRect(1, 3, 2, 2);
+    ctx.fillRect(10, 8, 2, 2);
+    ctx.fillRect(5, 12, 2, 2);
 
-    // Adjust color based on class
-    buildingColor = this.adjustColorBrightness(buildingColor, colorShift);
-
-    // Building base
-    ctx.fillStyle = buildingColor;
-    ctx.fillRect(1, 1, this.tileSize - 2, this.tileSize - 2);
-
-    // Building details based on level, type, and class
-    if (level >= 1) {
-      // Windows - style varies by class
-      let windowColor;
-      if (type === 'industrial') {
-        windowColor = '#444';
-      } else if (zoneClass === 'high' || zoneClass === 'upper') {
-        windowColor = '#FFFFC0'; // Warm golden light for high class
-      } else if (zoneClass === 'low') {
-        windowColor = '#DDD'; // Dimmer for low class
-      } else {
-        windowColor = '#FFE';
-      }
-      ctx.fillStyle = windowColor;
-
-      let windowSize, gap;
-      if (level <= 3) {
-        windowSize = 2;
-        gap = 5;
-      } else if (level <= 6) {
-        windowSize = 2;
-        gap = 4;
-      } else {
-        windowSize = 1;
-        gap = 3;
-      }
-
-      const startY = (level >= 7) ? 2 : 3;
-      for (let wy = startY; wy < this.tileSize - 2; wy += gap) {
-        for (let wx = 3; wx < this.tileSize - 2; wx += gap) {
-          ctx.fillRect(wx, wy, windowSize, windowSize);
-        }
-      }
-    }
-
-    // Building height indicator (roof/top details)
     if (type === 'residential') {
-      if (level >= 7) {
-        // High-rise roof - color varies by class
-        ctx.fillStyle = (zoneClass === 'high') ? '#111' : '#222';
-        ctx.fillRect(1, 1, this.tileSize - 2, 2);
-        // Antenna for level 9
-        if (level >= 9) {
-          ctx.fillStyle = (zoneClass === 'high') ? '#AAA' : '#666';
-          ctx.fillRect(this.tileSize / 2 - 1, 0, 2, 3);
-        }
-      } else if (level >= 4) {
-        ctx.fillStyle = '#444';
-        ctx.fillRect(1, 1, this.tileSize - 2, 1);
-      }
+      this.drawResidentialBuilding(ctx, level, zoneClass, colorShift);
     } else if (type === 'commercial') {
-      if (level >= 4) {
-        // Office building top
-        ctx.fillStyle = (zoneClass === 'high') ? '#000' : '#222';
-        ctx.fillRect(1, 1, this.tileSize - 2, 2);
-        if (level >= 5) {
-          // Spire for C-TOP - taller for high class
-          ctx.fillStyle = (zoneClass === 'high') ? '#CCC' : '#888';
-          const spireHeight = (zoneClass === 'high') ? 5 : 4;
-          ctx.fillRect(this.tileSize / 2 - 1, 0, 2, spireHeight);
-        }
-      } else if (level >= 2) {
-        ctx.fillStyle = '#333';
-        ctx.fillRect(1, 1, this.tileSize - 2, 1);
-      }
+      this.drawCommercialBuilding(ctx, level, zoneClass, colorShift);
     } else if (type === 'industrial') {
-      // Smokestacks for industrial (class is random for industrial)
+      this.drawIndustrialBuilding(ctx, level, zoneClass, colorShift);
+    }
+  }
+
+  // Draw residential buildings - SimCity Classic style
+  drawResidentialBuilding(ctx, level, zoneClass, colorShift) {
+    const ts = this.tileSize;
+
+    if (level <= 2) {
+      // Small house with peaked roof
+      const wallColor = this.adjustColorBrightness('#C4B090', colorShift);
+      const roofColor = this.adjustColorBrightness('#8B4513', colorShift);
+      const shadowColor = this.adjustColorBrightness('#8A7A60', colorShift);
+
+      // House body
+      ctx.fillStyle = wallColor;
+      ctx.fillRect(2, 7, 12, 7);
+
+      // Right shadow
+      ctx.fillStyle = shadowColor;
+      ctx.fillRect(12, 7, 2, 7);
+
+      // Peaked roof
+      ctx.fillStyle = roofColor;
+      ctx.beginPath();
+      ctx.moveTo(1, 7);
+      ctx.lineTo(8, 2);
+      ctx.lineTo(15, 7);
+      ctx.closePath();
+      ctx.fill();
+
+      // Roof shadow
+      ctx.fillStyle = this.adjustColorBrightness('#5A2A0A', colorShift);
+      ctx.beginPath();
+      ctx.moveTo(8, 2);
+      ctx.lineTo(15, 7);
+      ctx.lineTo(15, 8);
+      ctx.lineTo(8, 3);
+      ctx.closePath();
+      ctx.fill();
+
+      // Door
+      ctx.fillStyle = '#4A3020';
+      ctx.fillRect(7, 10, 3, 4);
+
+      // Window
+      ctx.fillStyle = zoneClass === 'high' ? '#FFFFC0' : '#87CEEB';
+      ctx.fillRect(3, 9, 3, 3);
       if (level >= 2) {
-        ctx.fillStyle = '#333';
-        const stackCount = Math.min(level, 3);
-        for (let i = 0; i < stackCount; i++) {
-          const stackX = 3 + i * 4;
-          ctx.fillRect(stackX, 0, 2, 4);
-        }
-        // Smoke for high levels
-        if (level >= 4) {
-          ctx.fillStyle = '#888';
-          ctx.fillRect(5, 0, 3, 2);
+        ctx.fillRect(11, 9, 2, 3);
+      }
+
+    } else if (level <= 4) {
+      // Duplex/rowhouse
+      const wallColor = this.adjustColorBrightness('#D4C4A8', colorShift);
+      const roofColor = this.adjustColorBrightness('#6B4423', colorShift);
+
+      // Building body
+      ctx.fillStyle = wallColor;
+      ctx.fillRect(1, 5, 14, 9);
+
+      // Shadow side
+      ctx.fillStyle = this.adjustColorBrightness('#A49478', colorShift);
+      ctx.fillRect(13, 5, 2, 9);
+
+      // Flat roof with slight overhang look
+      ctx.fillStyle = roofColor;
+      ctx.fillRect(0, 4, 16, 2);
+      ctx.fillStyle = this.adjustColorBrightness('#4A2A13', colorShift);
+      ctx.fillRect(0, 5, 16, 1);
+
+      // Windows (two floors)
+      ctx.fillStyle = zoneClass === 'high' ? '#FFFFC0' : '#87CEEB';
+      ctx.fillRect(2, 7, 2, 2);
+      ctx.fillRect(6, 7, 2, 2);
+      ctx.fillRect(10, 7, 2, 2);
+      ctx.fillRect(2, 11, 2, 2);
+      ctx.fillRect(6, 11, 2, 2);
+      ctx.fillRect(10, 11, 2, 2);
+
+      // Door
+      ctx.fillStyle = '#3A2515';
+      ctx.fillRect(4, 11, 2, 3);
+
+    } else if (level <= 6) {
+      // Apartment building
+      const wallColor = this.adjustColorBrightness('#B8A888', colorShift);
+
+      // Building body
+      ctx.fillStyle = wallColor;
+      ctx.fillRect(1, 3, 14, 11);
+
+      // Shadow side
+      ctx.fillStyle = this.adjustColorBrightness('#887858', colorShift);
+      ctx.fillRect(13, 3, 2, 11);
+
+      // Roof
+      ctx.fillStyle = '#444';
+      ctx.fillRect(0, 2, 16, 2);
+      ctx.fillStyle = '#333';
+      ctx.fillRect(0, 3, 16, 1);
+
+      // Window grid
+      ctx.fillStyle = zoneClass === 'high' ? '#FFFFC0' : '#87CEEB';
+      for (let row = 0; row < 3; row++) {
+        for (let col = 0; col < 4; col++) {
+          ctx.fillRect(2 + col * 3, 5 + row * 3, 2, 2);
         }
       }
-    }
 
-    // Class indicator border for high-class buildings
-    if ((zoneClass === 'high' || zoneClass === 'upper') && type !== 'industrial') {
-      ctx.strokeStyle = (zoneClass === 'high') ? '#FFD700' : '#C0C0C0';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(0.5, 0.5, this.tileSize - 1, this.tileSize - 1);
+      // Entrance
+      ctx.fillStyle = '#2A1A10';
+      ctx.fillRect(6, 12, 4, 2);
+
+    } else if (level <= 8) {
+      // High-rise apartment
+      const wallColor = this.adjustColorBrightness('#A09080', colorShift);
+
+      // Building body (taller appearance)
+      ctx.fillStyle = wallColor;
+      ctx.fillRect(2, 1, 12, 13);
+
+      // Shadow side
+      ctx.fillStyle = this.adjustColorBrightness('#706050', colorShift);
+      ctx.fillRect(12, 1, 2, 13);
+
+      // Roof
+      ctx.fillStyle = '#333';
+      ctx.fillRect(1, 0, 14, 2);
+
+      // Window grid (more windows for high-rise)
+      ctx.fillStyle = zoneClass === 'high' ? '#FFFFC0' : '#87CEEB';
+      for (let row = 0; row < 5; row++) {
+        for (let col = 0; col < 4; col++) {
+          ctx.fillRect(3 + col * 3, 2 + row * 2 + (row > 0 ? row : 0), 2, 1);
+        }
+      }
+
+      // Ground floor / entrance
+      ctx.fillStyle = '#504030';
+      ctx.fillRect(2, 13, 12, 1);
+      ctx.fillStyle = '#FFE';
+      ctx.fillRect(6, 13, 4, 1);
+
+    } else {
+      // R-TOP - Luxury tower
+      const wallColor = this.adjustColorBrightness('#E8E0D8', colorShift);
+
+      // Main tower
+      ctx.fillStyle = wallColor;
+      ctx.fillRect(3, 0, 10, 14);
+
+      // Shadow side
+      ctx.fillStyle = this.adjustColorBrightness('#B8B0A8', colorShift);
+      ctx.fillRect(11, 0, 2, 14);
+
+      // Penthouse top
+      ctx.fillStyle = '#222';
+      ctx.fillRect(4, 0, 8, 1);
+
+      // Antenna
+      ctx.fillStyle = '#888';
+      ctx.fillRect(7, 0, 2, 1);
+      ctx.fillRect(8, 0, 1, -2 + 2); // Small antenna tip
+
+      // Blue-tinted windows for luxury
+      ctx.fillStyle = zoneClass === 'high' ? '#C0D8FF' : '#88AACC';
+      for (let row = 0; row < 6; row++) {
+        ctx.fillRect(4, 1 + row * 2, 8, 1);
+      }
+
+      // Entrance
+      ctx.fillStyle = '#3A3A4A';
+      ctx.fillRect(3, 13, 10, 1);
+      ctx.fillStyle = '#FFE8C0';
+      ctx.fillRect(6, 13, 4, 1);
+    }
+  }
+
+  // Draw commercial buildings - SimCity Classic style
+  drawCommercialBuilding(ctx, level, zoneClass, colorShift) {
+    const ts = this.tileSize;
+
+    if (level <= 1) {
+      // Small shop
+      const wallColor = this.adjustColorBrightness('#A8B8C8', colorShift);
+
+      ctx.fillStyle = wallColor;
+      ctx.fillRect(1, 6, 14, 8);
+
+      // Shadow
+      ctx.fillStyle = this.adjustColorBrightness('#7888A8', colorShift);
+      ctx.fillRect(13, 6, 2, 8);
+
+      // Awning
+      ctx.fillStyle = '#C02020';
+      ctx.fillRect(0, 5, 16, 2);
+      ctx.fillStyle = '#901010';
+      ctx.fillRect(0, 6, 16, 1);
+
+      // Storefront window
+      ctx.fillStyle = '#87CEEB';
+      ctx.fillRect(2, 8, 10, 4);
+
+      // Door
+      ctx.fillStyle = '#404040';
+      ctx.fillRect(12, 9, 2, 5);
+
+    } else if (level <= 3) {
+      // Office building
+      const wallColor = this.adjustColorBrightness('#8899AA', colorShift);
+
+      ctx.fillStyle = wallColor;
+      ctx.fillRect(1, 3, 14, 11);
+
+      // Shadow
+      ctx.fillStyle = this.adjustColorBrightness('#5869AA', colorShift);
+      ctx.fillRect(13, 3, 2, 11);
+
+      // Roof
+      ctx.fillStyle = '#334';
+      ctx.fillRect(0, 2, 16, 2);
+
+      // Window grid
+      ctx.fillStyle = zoneClass === 'high' ? '#C0D8FF' : '#6688AA';
+      for (let row = 0; row < 3; row++) {
+        for (let col = 0; col < 3; col++) {
+          ctx.fillRect(2 + col * 4, 5 + row * 3, 3, 2);
+        }
+      }
+
+      // Entrance
+      ctx.fillStyle = '#223';
+      ctx.fillRect(5, 12, 6, 2);
+
+    } else if (level <= 4) {
+      // Larger office
+      const wallColor = this.adjustColorBrightness('#7080A0', colorShift);
+
+      ctx.fillStyle = wallColor;
+      ctx.fillRect(1, 1, 14, 13);
+
+      // Shadow
+      ctx.fillStyle = this.adjustColorBrightness('#405080', colorShift);
+      ctx.fillRect(13, 1, 2, 13);
+
+      // Roof
+      ctx.fillStyle = '#223';
+      ctx.fillRect(0, 0, 16, 2);
+
+      // Horizontal window bands
+      ctx.fillStyle = zoneClass === 'high' ? '#A0C0E0' : '#5070A0';
+      ctx.fillRect(2, 3, 11, 2);
+      ctx.fillRect(2, 6, 11, 2);
+      ctx.fillRect(2, 9, 11, 2);
+
+      // Entrance
+      ctx.fillStyle = '#112';
+      ctx.fillRect(5, 12, 6, 2);
+      ctx.fillStyle = '#FFE';
+      ctx.fillRect(6, 13, 4, 1);
+
+    } else {
+      // C-TOP - Skyscraper
+      const wallColor = this.adjustColorBrightness('#5060A0', colorShift);
+
+      // Main tower
+      ctx.fillStyle = wallColor;
+      ctx.fillRect(2, 0, 12, 14);
+
+      // Shadow
+      ctx.fillStyle = this.adjustColorBrightness('#303080', colorShift);
+      ctx.fillRect(12, 0, 2, 14);
+
+      // Spire
+      ctx.fillStyle = '#666';
+      ctx.fillRect(7, 0, 2, 1);
+      ctx.fillRect(7, -1 + 1, 2, 1);
+
+      // Glass curtain wall effect
+      ctx.fillStyle = zoneClass === 'high' ? '#80B0E0' : '#4080C0';
+      for (let row = 0; row < 6; row++) {
+        ctx.fillRect(3, 1 + row * 2, 9, 1);
+      }
+
+      // Top accent
+      ctx.fillStyle = '#FFD700';
+      ctx.fillRect(2, 0, 12, 1);
+
+      // Entrance
+      ctx.fillStyle = '#112';
+      ctx.fillRect(2, 13, 12, 1);
+      ctx.fillStyle = '#FFE8C0';
+      ctx.fillRect(5, 13, 6, 1);
+    }
+  }
+
+  // Draw industrial buildings - SimCity Classic style
+  drawIndustrialBuilding(ctx, level, zoneClass, colorShift) {
+    const ts = this.tileSize;
+
+    if (level <= 1) {
+      // Small warehouse
+      const wallColor = this.adjustColorBrightness('#B0A080', colorShift);
+
+      ctx.fillStyle = wallColor;
+      ctx.fillRect(1, 6, 14, 8);
+
+      // Shadow
+      ctx.fillStyle = this.adjustColorBrightness('#807050', colorShift);
+      ctx.fillRect(13, 6, 2, 8);
+
+      // Corrugated roof
+      ctx.fillStyle = '#666';
+      ctx.fillRect(0, 4, 16, 3);
+      ctx.fillStyle = '#555';
+      for (let i = 0; i < 8; i++) {
+        ctx.fillRect(i * 2, 5, 1, 2);
+      }
+
+      // Loading door
+      ctx.fillStyle = '#444';
+      ctx.fillRect(3, 9, 6, 5);
+
+      // Small window
+      ctx.fillStyle = '#87CEEB';
+      ctx.fillRect(11, 8, 3, 2);
+
+    } else if (level <= 2) {
+      // Factory
+      const wallColor = this.adjustColorBrightness('#A09070', colorShift);
+
+      ctx.fillStyle = wallColor;
+      ctx.fillRect(1, 5, 14, 9);
+
+      // Shadow
+      ctx.fillStyle = this.adjustColorBrightness('#706040', colorShift);
+      ctx.fillRect(13, 5, 2, 9);
+
+      // Sawtooth roof
+      ctx.fillStyle = '#555';
+      ctx.fillRect(0, 3, 16, 3);
+      ctx.fillStyle = '#666';
+      ctx.fillRect(0, 3, 8, 2);
+
+      // Smokestack
+      ctx.fillStyle = '#444';
+      ctx.fillRect(12, 0, 3, 5);
+      ctx.fillStyle = '#333';
+      ctx.fillRect(14, 0, 1, 5);
+
+      // Smoke
+      ctx.fillStyle = 'rgba(100,100,100,0.6)';
+      ctx.beginPath();
+      ctx.arc(13, 0, 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Windows
+      ctx.fillStyle = '#87CEEB';
+      ctx.fillRect(2, 7, 4, 3);
+      ctx.fillRect(7, 7, 4, 3);
+
+      // Door
+      ctx.fillStyle = '#333';
+      ctx.fillRect(3, 11, 4, 3);
+
+    } else if (level <= 3) {
+      // Large factory
+      const wallColor = this.adjustColorBrightness('#908060', colorShift);
+
+      ctx.fillStyle = wallColor;
+      ctx.fillRect(0, 4, 16, 10);
+
+      // Shadow
+      ctx.fillStyle = this.adjustColorBrightness('#605030', colorShift);
+      ctx.fillRect(14, 4, 2, 10);
+
+      // Roof
+      ctx.fillStyle = '#444';
+      ctx.fillRect(0, 3, 16, 2);
+
+      // Two smokestacks
+      ctx.fillStyle = '#555';
+      ctx.fillRect(2, 0, 3, 4);
+      ctx.fillRect(10, 0, 3, 4);
+      ctx.fillStyle = '#444';
+      ctx.fillRect(4, 0, 1, 4);
+      ctx.fillRect(12, 0, 1, 4);
+
+      // Smoke
+      ctx.fillStyle = 'rgba(80,80,80,0.5)';
+      ctx.beginPath();
+      ctx.arc(3, -1, 2, 0, Math.PI * 2);
+      ctx.arc(11, 0, 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Industrial windows
+      ctx.fillStyle = '#6688AA';
+      ctx.fillRect(1, 6, 3, 2);
+      ctx.fillRect(5, 6, 3, 2);
+      ctx.fillRect(9, 6, 3, 2);
+
+      // Large cargo door
+      ctx.fillStyle = '#333';
+      ctx.fillRect(4, 10, 8, 4);
+      ctx.fillStyle = '#444';
+      ctx.fillRect(4, 10, 8, 1);
+
+    } else {
+      // I-4 - Industrial complex
+      const wallColor = this.adjustColorBrightness('#807050', colorShift);
+
+      ctx.fillStyle = wallColor;
+      ctx.fillRect(0, 3, 16, 11);
+
+      // Shadow
+      ctx.fillStyle = this.adjustColorBrightness('#504020', colorShift);
+      ctx.fillRect(14, 3, 2, 11);
+
+      // Multiple smokestacks
+      ctx.fillStyle = '#444';
+      ctx.fillRect(1, 0, 2, 4);
+      ctx.fillRect(5, 0, 2, 5);
+      ctx.fillRect(9, 0, 2, 4);
+      ctx.fillRect(13, 0, 2, 3);
+
+      // Stack shadows
+      ctx.fillStyle = '#333';
+      ctx.fillRect(2, 0, 1, 4);
+      ctx.fillRect(6, 0, 1, 5);
+      ctx.fillRect(10, 0, 1, 4);
+      ctx.fillRect(14, 0, 1, 3);
+
+      // Heavy smoke
+      ctx.fillStyle = 'rgba(60,60,60,0.6)';
+      ctx.beginPath();
+      ctx.arc(2, -1, 2, 0, Math.PI * 2);
+      ctx.arc(6, -2, 3, 0, Math.PI * 2);
+      ctx.arc(10, 0, 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Roof structure
+      ctx.fillStyle = '#333';
+      ctx.fillRect(0, 2, 16, 2);
+
+      // Industrial pipes
+      ctx.fillStyle = '#666';
+      ctx.fillRect(0, 6, 16, 1);
+      ctx.fillRect(0, 10, 16, 1);
+
+      // Large industrial door
+      ctx.fillStyle = '#222';
+      ctx.fillRect(5, 11, 6, 3);
     }
   }
 
