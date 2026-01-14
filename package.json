@@ -1,0 +1,17 @@
+{
+  "name": "claude-city",
+  "version": "1.0.0",
+  "description": "SimCity Classic clone with Windows 95 aesthetics",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "keywords": ["simcity", "city-builder", "simulation", "retro", "windows95"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  }
+}

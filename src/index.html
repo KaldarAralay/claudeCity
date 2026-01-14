@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'">
+  <title>ClaudeCity</title>
+  <link rel="stylesheet" href="styles/win95.css">
+  <link rel="stylesheet" href="styles/game.css">
+</head>
+<body>
+  <div class="win95-window" id="main-window">
+    <!-- Title Bar -->
+    <div class="win95-title-bar" id="title-bar">
+      <div class="win95-title-bar-icon"></div>
+      <div class="win95-title-bar-text">ClaudeCity</div>
+      <div class="win95-title-bar-controls">
+        <button class="win95-title-btn" id="btn-minimize">_</button>
+        <button class="win95-title-btn" id="btn-maximize">[]</button>
+        <button class="win95-title-btn win95-title-btn-close" id="btn-close">X</button>
+      </div>
+    </div>
+
+    <!-- Menu Bar -->
+    <div class="win95-menu-bar" id="menu-bar">
+      <div class="win95-menu-item" data-menu="system">SYSTEM</div>
+      <div class="win95-menu-item" data-menu="options">OPTIONS</div>
+      <div class="win95-menu-item" data-menu="edit">EDIT</div>
+      <div class="win95-menu-item" data-menu="disasters">DISASTERS</div>
+      <div class="win95-menu-item" data-menu="windows">WINDOWS</div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="game-container">
+      <!-- Left Toolbar -->
+      <div class="toolbar" id="toolbar">
+        <div class="toolbar-section">
+          <button class="tool-btn selected" data-tool="pointer" title="Select">
+            <div class="tool-icon icon-pointer"></div>
+          </button>
+          <button class="tool-btn" data-tool="bulldozer" title="Bulldozer ($1)">
+            <div class="tool-icon icon-bulldozer"></div>
+          </button>
+        </div>
+        <div class="toolbar-section">
+          <button class="tool-btn" data-tool="road" title="Road ($4)">
+            <div class="tool-icon icon-road"></div>
+          </button>
+          <button class="tool-btn" data-tool="power-line" title="Power Line ($2)">
+            <div class="tool-icon icon-power-line"></div>
+          </button>
+          <button class="tool-btn" data-tool="rail" title="Rail ($10)">
+            <div class="tool-icon icon-rail"></div>
+          </button>
+        </div>
+        <div class="toolbar-section">
+          <button class="tool-btn" data-tool="residential" title="Residential Zone ($100)">
+            <div class="tool-icon icon-residential">R</div>
+          </button>
+          <button class="tool-btn" data-tool="commercial" title="Commercial Zone ($100)">
+            <div class="tool-icon icon-commercial">C</div>
+          </button>
+          <button class="tool-btn" data-tool="industrial" title="Industrial Zone ($100)">
+            <div class="tool-icon icon-industrial">I</div>
+          </button>
+        </div>
+        <div class="toolbar-section">
+          <button class="tool-btn" data-tool="police" title="Police Station ($500)">
+            <div class="tool-icon icon-police">PD</div>
+          </button>
+          <button class="tool-btn" data-tool="fire" title="Fire Station ($500)">
+            <div class="tool-icon icon-fire">FD</div>
+          </button>
+          <button class="tool-btn" data-tool="park" title="Park ($10)">
+            <div class="tool-icon icon-park"></div>
+          </button>
+        </div>
+        <div class="toolbar-section">
+          <button class="tool-btn" data-tool="coal-power" title="Coal Power Plant ($2000)">
+            <div class="tool-icon icon-coal"></div>
+          </button>
+          <button class="tool-btn" data-tool="nuclear-power" title="Nuclear Power Plant ($5000)">
+            <div class="tool-icon icon-nuclear"></div>
+          </button>
+        </div>
+        <div class="toolbar-section">
+          <button class="tool-btn" data-tool="stadium" title="Stadium ($3000)">
+            <div class="tool-icon icon-stadium"></div>
+          </button>
+          <button class="tool-btn" data-tool="seaport" title="Seaport ($1000)">
+            <div class="tool-icon icon-seaport"></div>
+          </button>
+          <button class="tool-btn" data-tool="airport" title="Airport ($4000)">
+            <div class="tool-icon icon-airport"></div>
+          </button>
+        </div>
+
+        <!-- Demand Indicator (RCI) -->
+        <div class="demand-indicator" id="demand-indicator">
+          <div class="demand-bar-container">
+            <div class="demand-bar demand-r" id="demand-r"></div>
+            <div class="demand-label">R</div>
+          </div>
+          <div class="demand-bar-container">
+            <div class="demand-bar demand-c" id="demand-c"></div>
+            <div class="demand-label">C</div>
+          </div>
+          <div class="demand-bar-container">
+            <div class="demand-bar demand-i" id="demand-i"></div>
+            <div class="demand-label">I</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game Canvas Area -->
+      <div class="canvas-container" id="canvas-container">
+        <canvas id="game-canvas"></canvas>
+      </div>
+
+      <!-- Mini Map (floating) -->
+      <div class="minimap-window win95-inner-window" id="minimap-window">
+        <div class="win95-inner-title-bar">
+          <span>City Map</span>
+          <button class="win95-inner-close-btn" id="minimap-close">x</button>
+        </div>
+        <canvas id="minimap-canvas" width="150" height="150"></canvas>
+      </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar" id="status-bar">
+      <div class="status-section status-funds">
+        <span class="status-label">Funds:</span>
+        <span class="status-value" id="status-funds">$20,000</span>
+      </div>
+      <div class="status-section status-date">
+        <span class="status-value" id="status-date">Jan 1900</span>
+      </div>
+      <div class="status-section status-population">
+        <span class="status-label">Population:</span>
+        <span class="status-value" id="status-population">0</span>
+      </div>
+      <div class="status-section status-tool">
+        <span class="status-value" id="status-tool">Select</span>
+      </div>
+      <div class="status-section status-speed">
+        <button class="speed-btn" data-speed="pause" title="Pause">||</button>
+        <button class="speed-btn selected" data-speed="normal" title="Normal">></button>
+        <button class="speed-btn" data-speed="fast" title="Fast">>></button>
+        <button class="speed-btn" data-speed="ultra" title="Ultra Fast">>>></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Menu Dropdowns (hidden by default) -->
+  <div class="win95-dropdown" id="dropdown-system" style="display: none;">
+    <div class="win95-dropdown-item" data-action="new-city">New City</div>
+    <div class="win95-dropdown-item" data-action="load-city">Load City...</div>
+    <div class="win95-dropdown-item" data-action="save-city">Save City</div>
+    <div class="win95-dropdown-item" data-action="save-city-as">Save City As...</div>
+    <div class="win95-dropdown-separator"></div>
+    <div class="win95-dropdown-item" data-action="exit">Exit</div>
+  </div>
+  <div class="win95-dropdown" id="dropdown-options" style="display: none;">
+    <div class="win95-dropdown-item" data-action="budget">Budget</div>
+    <div class="win95-dropdown-item" data-action="tax-rate">Tax Rate</div>
+    <div class="win95-dropdown-separator"></div>
+    <div class="win95-dropdown-item" data-action="auto-bulldoze">Auto Bulldoze</div>
+    <div class="win95-dropdown-item" data-action="auto-budget">Auto Budget</div>
+  </div>
+  <div class="win95-dropdown" id="dropdown-edit" style="display: none;">
+    <div class="win95-dropdown-item" data-action="undo">Undo</div>
+  </div>
+  <div class="win95-dropdown" id="dropdown-disasters" style="display: none;">
+    <div class="win95-dropdown-item" data-action="fire">Fire</div>
+    <div class="win95-dropdown-item" data-action="flood">Flood</div>
+    <div class="win95-dropdown-item" data-action="tornado">Tornado</div>
+    <div class="win95-dropdown-item" data-action="earthquake">Earthquake</div>
+    <div class="win95-dropdown-item" data-action="monster">Monster</div>
+    <div class="win95-dropdown-separator"></div>
+    <div class="win95-dropdown-item" data-action="disable-disasters">Disable Disasters</div>
+  </div>
+  <div class="win95-dropdown" id="dropdown-windows" style="display: none;">
+    <div class="win95-dropdown-item" data-action="toggle-minimap">City Map</div>
+    <div class="win95-dropdown-item" data-action="graphs">Graphs</div>
+    <div class="win95-dropdown-item" data-action="population">Population</div>
+    <div class="win95-dropdown-separator"></div>
+    <div class="win95-dropdown-item" data-action="overlay-power">Power Grid</div>
+    <div class="win95-dropdown-item" data-action="overlay-traffic">Traffic</div>
+    <div class="win95-dropdown-item" data-action="overlay-pollution">Pollution</div>
+    <div class="win95-dropdown-item" data-action="overlay-crime">Crime</div>
+    <div class="win95-dropdown-item" data-action="overlay-landvalue">Land Value</div>
+  </div>
+
+  <script src="js/data/constants.js"></script>
+  <script src="js/game/Tile.js"></script>
+  <script src="js/game/City.js"></script>
+  <script src="js/game/Budget.js"></script>
+  <script src="js/game/Simulation.js"></script>
+  <script src="js/renderer/Camera.js"></script>
+  <script src="js/renderer/TileSprites.js"></script>
+  <script src="js/renderer/Renderer.js"></script>
+  <script src="js/renderer/Minimap.js"></script>
+  <script src="js/ui/Toolbar.js"></script>
+  <script src="js/ui/MenuBar.js"></script>
+  <script src="js/ui/StatusBar.js"></script>
+  <script src="js/game/Game.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
