@@ -258,37 +258,120 @@ class TileSprites {
     ctx.setLineDash([]);
   }
 
-  // Draw a building tile based on type and density
-  drawBuilding(ctx, type, density, x, y, width, height, isMainTile) {
+  // Draw a building tile based on type and level
+  // Residential: levels 1-9 (R-TOP), Commercial: levels 1-5 (C-TOP), Industrial: levels 1-4 (I-4)
+  drawBuilding(ctx, type, level, x, y, width, height, isMainTile) {
+    // Extended color palettes for each zone type
     const colors = {
-      residential: ['#90EE90', '#228B22', '#1C6B1C', '#155015', '#0E350E'],
-      commercial: ['#87CEEB', '#4169E1', '#3157C4', '#2445A7', '#17338A'],
-      industrial: ['#FFD700', '#DAA520', '#B8860B', '#8B6914', '#5E4C1D']
+      // Residential: 10 colors (0 = zone, 1-9 = buildings)
+      residential: [
+        '#90EE90', // Level 0: Empty zone (light green)
+        '#7CCD7C', // Level 1: Small house
+        '#6BB86B', // Level 2: Houses
+        '#5AA35A', // Level 3: Dense houses
+        '#498E49', // Level 4: Small apartments
+        '#388038', // Level 5: Apartments
+        '#2B6B2B', // Level 6: Large apartments
+        '#1E561E', // Level 7: High-rise
+        '#124112', // Level 8: Tower
+        '#082C08'  // Level 9: R-TOP (maximum)
+      ],
+      // Commercial: 6 colors (0 = zone, 1-5 = buildings)
+      commercial: [
+        '#87CEEB', // Level 0: Empty zone
+        '#6AB8DC', // Level 1: Small shop
+        '#4D9FCB', // Level 2: Shops
+        '#3584B8', // Level 3: Store
+        '#2068A0', // Level 4: Large store
+        '#104878'  // Level 5: C-TOP (office tower)
+      ],
+      // Industrial: 5 colors (0 = zone, 1-4 = buildings)
+      industrial: [
+        '#FFD700', // Level 0: Empty zone
+        '#E6C200', // Level 1: Small factory
+        '#C9A800', // Level 2: Factory
+        '#A68A00', // Level 3: Large factory
+        '#7A6500'  // Level 4: I-4 (industrial complex)
+      ]
     };
 
     const colorSet = colors[type] || colors.residential;
-    const buildingColor = colorSet[Math.min(density, colorSet.length - 1)];
+    const buildingColor = colorSet[Math.min(level, colorSet.length - 1)];
 
     // Building base
     ctx.fillStyle = buildingColor;
     ctx.fillRect(1, 1, this.tileSize - 2, this.tileSize - 2);
 
-    // Windows for developed buildings
-    if (density >= 1) {
-      ctx.fillStyle = '#FFE';
-      const windowSize = 2;
-      const gap = 4;
-      for (let wy = 3; wy < this.tileSize - 3; wy += gap) {
-        for (let wx = 3; wx < this.tileSize - 3; wx += gap) {
+    // Building details based on level and type
+    if (level >= 1) {
+      // Windows - more and smaller for higher levels
+      ctx.fillStyle = (type === 'industrial') ? '#444' : '#FFE';
+
+      let windowSize, gap;
+      if (level <= 3) {
+        windowSize = 2;
+        gap = 5;
+      } else if (level <= 6) {
+        windowSize = 2;
+        gap = 4;
+      } else {
+        windowSize = 1;
+        gap = 3;
+      }
+
+      const startY = (level >= 7) ? 2 : 3;
+      for (let wy = startY; wy < this.tileSize - 2; wy += gap) {
+        for (let wx = 3; wx < this.tileSize - 2; wx += gap) {
           ctx.fillRect(wx, wy, windowSize, windowSize);
         }
       }
     }
 
-    // Roof line for higher density
-    if (density >= 3) {
-      ctx.fillStyle = '#333';
-      ctx.fillRect(1, 1, this.tileSize - 2, 2);
+    // Building height indicator (roof/top details)
+    if (type === 'residential') {
+      if (level >= 7) {
+        // High-rise roof
+        ctx.fillStyle = '#222';
+        ctx.fillRect(1, 1, this.tileSize - 2, 2);
+        // Antenna for level 9
+        if (level >= 9) {
+          ctx.fillStyle = '#666';
+          ctx.fillRect(this.tileSize / 2 - 1, 0, 2, 3);
+        }
+      } else if (level >= 4) {
+        // Apartment roof
+        ctx.fillStyle = '#444';
+        ctx.fillRect(1, 1, this.tileSize - 2, 1);
+      }
+    } else if (type === 'commercial') {
+      if (level >= 4) {
+        // Office building top
+        ctx.fillStyle = '#222';
+        ctx.fillRect(1, 1, this.tileSize - 2, 2);
+        if (level >= 5) {
+          // Spire for C-TOP
+          ctx.fillStyle = '#888';
+          ctx.fillRect(this.tileSize / 2 - 1, 0, 2, 4);
+        }
+      } else if (level >= 2) {
+        ctx.fillStyle = '#333';
+        ctx.fillRect(1, 1, this.tileSize - 2, 1);
+      }
+    } else if (type === 'industrial') {
+      // Smokestacks for industrial
+      if (level >= 2) {
+        ctx.fillStyle = '#333';
+        const stackCount = Math.min(level, 3);
+        for (let i = 0; i < stackCount; i++) {
+          const stackX = 3 + i * 4;
+          ctx.fillRect(stackX, 0, 2, 4);
+        }
+        // Smoke for high levels
+        if (level >= 4) {
+          ctx.fillStyle = '#888';
+          ctx.fillRect(5, 0, 3, 2);
+        }
+      }
     }
   }
 
@@ -385,7 +468,7 @@ class TileSprites {
       this.drawBuilding(
         ctx,
         tile.zoneType,
-        tile.density,
+        tile.level,  // Use level instead of density for accurate zone progression
         tile.x,
         tile.y,
         tile.buildingWidth,

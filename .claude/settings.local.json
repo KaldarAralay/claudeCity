@@ -3,7 +3,8 @@
     "allow": [
       "WebFetch(domain:en.wikipedia.org)",
       "Bash(npm install)",
-      "Bash(npm start)"
+      "Bash(npm start)",
+      "Bash(timeout /t 5 /nobreak)"
     ]
   }
 }

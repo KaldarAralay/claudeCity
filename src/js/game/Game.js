@@ -502,22 +502,33 @@ Projected Cash Flow: $${summary.projectedCashFlow.toLocaleString()}`);
     dialog.id = 'graphs-dialog';
     dialog.className = 'win95-dialog';
     dialog.innerHTML = `
-      <div class="win95-title-bar">
+      <div class="win95-title-bar" style="-webkit-app-region: no-drag;">
         <div class="win95-title-bar-text">City Graphs</div>
         <div class="win95-title-bar-controls">
-          <button class="win95-title-btn win95-title-btn-close" onclick="this.closest('.win95-dialog').remove()">X</button>
+          <button class="win95-title-btn win95-title-btn-close" id="graphs-close-btn">X</button>
         </div>
       </div>
       <div class="win95-dialog-content" style="padding: 10px; min-width: 400px;">
         <canvas id="graph-canvas" width="380" height="200" style="border: 1px inset #808080; background: #FFF;"></canvas>
         <div style="margin-top: 10px; display: flex; gap: 10px;">
-          <button class="win95-button" onclick="game.drawGraph('population')">Population</button>
-          <button class="win95-button" onclick="game.drawGraph('funds')">Funds</button>
-          <button class="win95-button" onclick="game.drawGraph('cashflow')">Cash Flow</button>
+          <button class="win95-button" data-graph="population">Population</button>
+          <button class="win95-button" data-graph="funds">Funds</button>
+          <button class="win95-button" data-graph="cashflow">Cash Flow</button>
         </div>
       </div>
     `;
     document.body.appendChild(dialog);
+
+    // Add event listeners (CSP blocks inline onclick)
+    dialog.querySelector('#graphs-close-btn').addEventListener('click', () => {
+      dialog.remove();
+    });
+
+    dialog.querySelectorAll('[data-graph]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        this.drawGraph(btn.dataset.graph);
+      });
+    });
 
     // Draw initial population graph
     this.drawGraph('population');

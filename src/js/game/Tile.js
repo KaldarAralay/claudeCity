@@ -6,7 +6,8 @@ class Tile {
     this.y = y;
     this.type = TILE_TYPES.EMPTY;
     this.zoneType = null;         // For zone tiles: 'residential', 'commercial', 'industrial'
-    this.density = 0;             // Development level 0-4
+    this.level = 0;               // Zone development level (R: 0-9, C: 0-5, I: 0-4)
+    this.density = 0;             // Legacy alias for level (for backwards compatibility)
     this.powered = false;         // Has power connection
     this.roadAccess = false;      // Has road connection
     this.buildingId = null;       // For multi-tile buildings, reference to main tile
@@ -19,6 +20,7 @@ class Tile {
     this.traffic = 0;             // Traffic density 0-255
     this.fireRisk = 0;            // Fire risk 0-255
     this.population = 0;          // Population for residential tiles
+    this.jobs = 0;                // Jobs for commercial/industrial tiles
   }
 
   // Check if tile is empty or can be bulldozed
@@ -137,6 +139,7 @@ class Tile {
   clear() {
     this.type = TILE_TYPES.EMPTY;
     this.zoneType = null;
+    this.level = 0;
     this.density = 0;
     this.powered = false;
     this.roadAccess = false;
@@ -145,6 +148,7 @@ class Tile {
     this.buildingWidth = 1;
     this.buildingHeight = 1;
     this.population = 0;
+    this.jobs = 0;
   }
 
   // Set as zone
@@ -161,7 +165,16 @@ class Tile {
         break;
     }
     this.zoneType = zoneType;
+    this.level = 0;
     this.density = 0;
+    this.population = 0;
+    this.jobs = 0;
+  }
+
+  // Get the maximum level for this zone type
+  getMaxLevel() {
+    if (!this.zoneType) return 0;
+    return ZONE_MAX_LEVELS[this.zoneType] || 0;
   }
 
   // Develop zone to building
@@ -181,19 +194,67 @@ class Tile {
     }
   }
 
-  // Increase density
+  // Increase zone level
+  increaseLevel() {
+    const maxLevel = this.getMaxLevel();
+    if (this.level < maxLevel) {
+      this.level++;
+      this.density = this.level; // Keep density in sync for backwards compatibility
+      this.updateStats();
+      return true;
+    }
+    return false;
+  }
+
+  // Decrease zone level
+  decreaseLevel() {
+    if (this.level > 0) {
+      this.level--;
+      this.density = this.level;
+      this.updateStats();
+      return true;
+    }
+    return false;
+  }
+
+  // Legacy method - now calls increaseLevel
   increaseDensity() {
-    if (this.density < DENSITY_LEVELS.VERY_HIGH) {
-      this.density++;
-      this.updatePopulation();
+    return this.increaseLevel();
+  }
+
+  // Update population and jobs based on zone level
+  updateStats() {
+    if (this.isResidential()) {
+      this.population = RESIDENTIAL_POPULATION[this.level] || 0;
+      this.jobs = 0;
+    } else if (this.isCommercial()) {
+      this.population = 0;
+      this.jobs = COMMERCIAL_JOBS[this.level] || 0;
+    } else if (this.isIndustrial()) {
+      this.population = 0;
+      this.jobs = INDUSTRIAL_JOBS[this.level] || 0;
     }
   }
 
-  // Update population based on density (for residential)
+  // Legacy method - now calls updateStats
   updatePopulation() {
-    if (this.isResidential()) {
-      this.population = POPULATION_PER_DENSITY[this.density] || 0;
+    this.updateStats();
+  }
+
+  // Check if zone is at maximum level
+  isMaxLevel() {
+    return this.level >= this.getMaxLevel();
+  }
+
+  // Get zone level label (e.g., "R-3", "C-TOP", "I-2")
+  getLevelLabel() {
+    if (!this.zoneType) return '';
+    const prefix = this.zoneType.charAt(0).toUpperCase();
+    const maxLevel = this.getMaxLevel();
+    if (this.level >= maxLevel) {
+      return `${prefix}-TOP`;
     }
+    return `${prefix}-${this.level}`;
   }
 
   // Serialize for save
@@ -203,6 +264,7 @@ class Tile {
       y: this.y,
       type: this.type,
       zoneType: this.zoneType,
+      level: this.level,
       density: this.density,
       powered: this.powered,
       roadAccess: this.roadAccess,
@@ -212,7 +274,8 @@ class Tile {
       buildingHeight: this.buildingHeight,
       landValue: this.landValue,
       pollution: this.pollution,
-      population: this.population
+      population: this.population,
+      jobs: this.jobs
     };
   }
 

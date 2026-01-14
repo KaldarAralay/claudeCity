@@ -104,7 +104,53 @@ const TILE_TYPES = {
   FLOOD: 101
 };
 
-// Zone development levels (density)
+// Zone development levels - based on NES SimCity mechanics
+// Residential: 9 levels (0 = undeveloped, 1-9 = developed, 9 = TOP)
+// Commercial: 5 levels (0 = undeveloped, 1-5 = developed, 5 = TOP)
+// Industrial: 4 levels (0 = undeveloped, 1-4 = developed, 4 = TOP)
+const ZONE_MAX_LEVELS = {
+  residential: 9,
+  commercial: 5,
+  industrial: 4
+};
+
+// Population per zone level (NES SimCity accurate values)
+// R-TOP (level 9) = 1920 residents
+const RESIDENTIAL_POPULATION = {
+  0: 0,      // Undeveloped zone
+  1: 8,      // R-1: Small house
+  2: 24,     // R-2: Houses
+  3: 64,     // R-3: Dense houses
+  4: 128,    // R-4: Small apartments
+  5: 256,    // R-5: Apartments
+  6: 512,    // R-6: Large apartments
+  7: 768,    // R-7: High-rise
+  8: 1280,   // R-8: Tower
+  9: 1920    // R-TOP: Maximum density tower
+};
+
+// Commercial jobs per zone level
+// C-TOP (level 5) = 1960 jobs
+const COMMERCIAL_JOBS = {
+  0: 0,      // Undeveloped
+  1: 392,    // C-1: Small shop
+  2: 784,    // C-2: Shops
+  3: 1176,   // C-3: Store
+  4: 1568,   // C-4: Large store
+  5: 1960    // C-TOP: Office tower
+};
+
+// Industrial jobs per zone level
+// I-4 = 640 workers
+const INDUSTRIAL_JOBS = {
+  0: 0,      // Undeveloped
+  1: 160,    // I-1: Small factory
+  2: 320,    // I-2: Factory
+  3: 480,    // I-3: Large factory
+  4: 640     // I-4: Industrial complex
+};
+
+// Legacy alias for backwards compatibility
 const DENSITY_LEVELS = {
   EMPTY: 0,
   LOW: 1,
@@ -125,14 +171,8 @@ const SERVICE_RADIUS = {
   'fire': 15
 };
 
-// Population per density level (residential)
-const POPULATION_PER_DENSITY = {
-  0: 0,
-  1: 10,
-  2: 40,
-  3: 100,
-  4: 200
-};
+// Legacy population lookup (now uses RESIDENTIAL_POPULATION)
+const POPULATION_PER_DENSITY = RESIDENTIAL_POPULATION;
 
 // Colors for rendering
 const TILE_COLORS = {

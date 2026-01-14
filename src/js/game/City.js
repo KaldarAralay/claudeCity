@@ -395,6 +395,40 @@ class City {
     return counts;
   }
 
+  // Get zone statistics including population and jobs
+  getZoneStats() {
+    const stats = {
+      population: 0,
+      commercialJobs: 0,
+      industrialJobs: 0,
+      residentialZones: 0,
+      commercialZones: 0,
+      industrialZones: 0
+    };
+
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
+        const tile = this.tiles[y][x];
+
+        // Only count main tiles to avoid double-counting
+        if (tile.isMainTile) {
+          if (tile.isResidential()) {
+            stats.population += tile.population;
+            if (tile.isBuilding()) stats.residentialZones++;
+          } else if (tile.isCommercial()) {
+            stats.commercialJobs += tile.jobs;
+            if (tile.isBuilding()) stats.commercialZones++;
+          } else if (tile.isIndustrial()) {
+            stats.industrialJobs += tile.jobs;
+            if (tile.isBuilding()) stats.industrialZones++;
+          }
+        }
+      }
+    }
+
+    return stats;
+  }
+
   // Count infrastructure
   countInfrastructure() {
     let roads = 0;

@@ -270,7 +270,7 @@ class Simulation {
     }
   }
 
-  // Develop a zone (change from empty zone to building)
+  // Develop a zone (change from empty zone to building at level 1)
   developZone(x, y, zoneType) {
     const mainTile = this.city.getTile(x, y);
     const building = this.city.buildings.get(mainTile?.buildingId);
@@ -281,37 +281,41 @@ class Simulation {
         const tile = this.city.getTile(x + dx, y + dy);
         if (tile) {
           tile.develop();
+          tile.level = 1;
           tile.density = 1;
-          // Only main tile tracks population
+          // Only main tile tracks population/jobs
           if (tile.isMainTile) {
-            tile.updatePopulation();
+            tile.updateStats();
           }
         }
       }
     }
   }
 
-  // Increase zone density
+  // Increase zone level (with max level check per zone type)
   increaseZoneDensity(x, y) {
     const mainTile = this.city.getTile(x, y);
     const building = this.city.buildings.get(mainTile?.buildingId);
     if (!building) return;
 
+    // Check if main tile is at max level
+    if (mainTile.isMaxLevel()) return;
+
     for (let dy = 0; dy < building.height; dy++) {
       for (let dx = 0; dx < building.width; dx++) {
         const tile = this.city.getTile(x + dx, y + dy);
-        if (tile && tile.density < DENSITY_LEVELS.VERY_HIGH) {
-          tile.density++;
-          // Only main tile tracks population
+        if (tile) {
+          tile.increaseLevel();
+          // Only main tile tracks population/jobs
           if (tile.isMainTile) {
-            tile.updatePopulation();
+            tile.updateStats();
           }
         }
       }
     }
   }
 
-  // Decrease zone density
+  // Decrease zone level
   decreaseZoneDensity(x, y) {
     const mainTile = this.city.getTile(x, y);
     const building = this.city.buildings.get(mainTile?.buildingId);
@@ -320,11 +324,11 @@ class Simulation {
     for (let dy = 0; dy < building.height; dy++) {
       for (let dx = 0; dx < building.width; dx++) {
         const tile = this.city.getTile(x + dx, y + dy);
-        if (tile && tile.density > 0) {
-          tile.density--;
-          // Only main tile tracks population
+        if (tile && tile.level > 0) {
+          tile.decreaseLevel();
+          // Only main tile tracks population/jobs
           if (tile.isMainTile) {
-            tile.updatePopulation();
+            tile.updateStats();
           }
         }
       }
@@ -333,55 +337,56 @@ class Simulation {
 
   // Update demand based on city state (SimCity-style RCI model)
   updateDemand() {
-    const counts = this.city.countZones();
+    const stats = this.city.getZoneStats();
 
-    // Calculate actual population capacity and jobs
-    const residentialCapacity = counts.residential.developed * 100; // Max people per zone
-    const commercialJobs = counts.commercial.developed * 50;
-    const industrialJobs = counts.industrial.developed * 80;
-    const totalJobs = commercialJobs + industrialJobs;
+    // Use actual jobs from commercial and industrial zones
+    const totalJobs = stats.commercialJobs + stats.industrialJobs;
 
     // Residential demand: people want to move in if there are jobs
     // High demand when jobs > population, low when housing exceeds jobs
     const jobsPerCapita = this.population > 0 ? totalJobs / this.population : 2;
-    const housingPressure = this.population > 0 ? residentialCapacity / this.population : 2;
+
+    // Calculate housing availability based on potential max population
+    const maxResidentialPop = stats.residentialZones * 1920; // Max possible if all R-TOP
+    const housingPressure = maxResidentialPop > 0 ? this.population / maxResidentialPop : 0;
 
     this.residentialDemand = Math.min(
       DEMAND_FACTORS.MAX_DEMAND,
       Math.max(
         DEMAND_FACTORS.MIN_DEMAND,
-        0.5 + (jobsPerCapita - 1) * 0.5 - (housingPressure - 1) * 0.3
+        0.5 + (jobsPerCapita - 0.8) * 0.6 - housingPressure * 0.3
       )
     );
 
     // Commercial demand: needs population to serve, follows residential
-    // Wants roughly 1 commercial per 3 residential
-    const idealCommercial = counts.residential.developed / 3;
-    const commercialRatio = idealCommercial > 0 ? counts.commercial.developed / idealCommercial : 1;
+    // Optimal ratio: ~1 commercial job per 2 residents
+    const idealCommercialJobs = this.population * 0.5;
+    const commercialRatio = idealCommercialJobs > 0 ? stats.commercialJobs / idealCommercialJobs : 1;
 
     this.commercialDemand = Math.min(
       DEMAND_FACTORS.MAX_DEMAND,
       Math.max(
         DEMAND_FACTORS.MIN_DEMAND,
-        0.3 + (this.population / 500) * 0.2 - (commercialRatio - 1) * 0.5
+        0.3 + (this.population / 1000) * 0.3 - (commercialRatio - 1) * 0.5
       )
     );
 
     // Industrial demand: foundational, external market driven
-    // Starts high, decreases as industrial base grows, affected by pollution
-    const industrialBase = counts.industrial.developed;
+    // Needs ~1 industrial job per 3 residents for full employment
+    const idealIndustrialJobs = this.population * 0.33;
+    const industrialRatio = idealIndustrialJobs > 0 ? stats.industrialJobs / idealIndustrialJobs : 1;
     const pollutionPenalty = this.stats.pollutionLevel / 255 * 0.5;
 
     this.industrialDemand = Math.min(
       DEMAND_FACTORS.MAX_DEMAND,
       Math.max(
         DEMAND_FACTORS.MIN_DEMAND,
-        0.6 - industrialBase * 0.02 - pollutionPenalty + (this.population / 2000) * 0.1
+        0.6 - (industrialRatio - 1) * 0.4 - pollutionPenalty + (this.population / 5000) * 0.2
       )
     );
 
-    // Tax rate affects all demand
-    const taxPenalty = (this.budget.taxRate - 7) * 0.03; // 7% is optimal
+    // Tax rate affects all demand (7% is optimal)
+    const taxPenalty = (this.budget.taxRate - 7) * 0.03;
     this.residentialDemand -= taxPenalty;
     this.commercialDemand -= taxPenalty;
     this.industrialDemand -= taxPenalty * 0.5; // Industry less affected by taxes
@@ -402,18 +407,18 @@ class Simulation {
         const tile = this.city.tiles[y][x];
 
         if (tile.isMainTile && tile.isBuilding()) {
-          // Traffic generated based on zone type and density
+          // Traffic generated based on zone type and level
           let trafficGenerated = 0;
 
           if (tile.isResidential()) {
-            // Residential generates commuter traffic
-            trafficGenerated = tile.density * 15;
+            // Residential generates commuter traffic (scales with level 1-9)
+            trafficGenerated = tile.level * 10;
           } else if (tile.isCommercial()) {
-            // Commercial generates shopper traffic
-            trafficGenerated = tile.density * 20;
+            // Commercial generates shopper traffic (scales with level 1-5)
+            trafficGenerated = tile.level * 20;
           } else if (tile.isIndustrial()) {
-            // Industrial generates truck traffic
-            trafficGenerated = tile.density * 25;
+            // Industrial generates truck traffic (scales with level 1-4)
+            trafficGenerated = tile.level * 30;
           }
 
           // Spread traffic to nearby roads (radius 5)
@@ -449,7 +454,8 @@ class Simulation {
         const tile = this.city.tiles[y][x];
 
         if (tile.isMainTile && tile.isIndustrial() && tile.isBuilding()) {
-          const pollutionStrength = 30 + tile.density * 20;
+          // Industrial pollution scales with level (50 base per NES guide, +10 per level)
+          const pollutionStrength = 40 + tile.level * 10;
           this.spreadPollution(x, y, pollutionStrength, 8);
         }
 
