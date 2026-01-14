@@ -26,7 +26,20 @@ class Simulation {
       totalPowerConsumed: 0,
       unemploymentRate: 0,
       crimeRate: 0,
-      pollutionLevel: 0
+      pollutionLevel: 0,
+      averageTraffic: 0,
+      averageLandValue: 0
+    };
+
+    // Voter complaints (0-100%, below 20% is good)
+    this.voterComplaints = {
+      crime: 0,
+      fire: 0,
+      housingCosts: 0,
+      pollution: 0,
+      taxes: 0,
+      traffic: 0,
+      unemployment: 0
     };
   }
 
@@ -85,6 +98,7 @@ class Simulation {
     this.updateLandValues();
     this.updateServices();
     this.updateDisasters();
+    this.calculateVoterComplaints();
 
     // Process budget
     this.budget.processMonth(this.city);
@@ -738,7 +752,10 @@ class Simulation {
     // Calculate city-wide stats
     let totalCrime = 0;
     let totalPollution = 0;
-    let count = 0;
+    let totalLandValue = 0;
+    let totalTraffic = 0;
+    let buildingCount = 0;
+    let roadCount = 0;
 
     for (let y = 0; y < this.city.height; y++) {
       for (let x = 0; x < this.city.width; x++) {
@@ -746,13 +763,20 @@ class Simulation {
         if (tile.isBuilding()) {
           totalCrime += tile.crime;
           totalPollution += tile.pollution;
-          count++;
+          totalLandValue += tile.landValue;
+          buildingCount++;
+        }
+        if (tile.isRoad()) {
+          totalTraffic += tile.traffic;
+          roadCount++;
         }
       }
     }
 
-    this.stats.crimeRate = count > 0 ? totalCrime / count : 0;
-    this.stats.pollutionLevel = count > 0 ? totalPollution / count : 0;
+    this.stats.crimeRate = buildingCount > 0 ? totalCrime / buildingCount : 0;
+    this.stats.pollutionLevel = buildingCount > 0 ? totalPollution / buildingCount : 0;
+    this.stats.averageLandValue = buildingCount > 0 ? totalLandValue / buildingCount : 0;
+    this.stats.averageTraffic = roadCount > 0 ? totalTraffic / roadCount : 0;
   }
 
   // Get date string
@@ -766,6 +790,124 @@ class Simulation {
       residential: Math.round((this.residentialDemand + 1) / 3 * 100),
       commercial: Math.round((this.commercialDemand + 1) / 3 * 100),
       industrial: Math.round((this.industrialDemand + 1) / 3 * 100)
+    };
+  }
+
+  // Calculate voter complaints (0-100% for each category)
+  calculateVoterComplaints() {
+    const stats = this.city.getZoneStats();
+    const zoneCounts = this.city.countZones();
+    const totalDevelopedZones = zoneCounts.residential.developed +
+                                 zoneCounts.commercial.developed +
+                                 zoneCounts.industrial.developed;
+
+    // Skip calculations if no developed zones
+    if (totalDevelopedZones === 0) {
+      this.voterComplaints = {
+        crime: 0, fire: 0, housingCosts: 0,
+        pollution: 0, taxes: 0, traffic: 0, unemployment: 0
+      };
+      return;
+    }
+
+    // 1. CRIME - based on average crime level vs police coverage
+    // Crime rate 0 = 0%, Crime rate 100 = 100%
+    this.voterComplaints.crime = Math.min(100, Math.round(
+      (this.stats.crimeRate / COMPLAINT_THRESHOLDS.CRIME_ACCEPTABLE) * 20
+    ));
+
+    // 2. FIRE - based on active fires and fire station coverage
+    const activeFireCount = this.activeDisasters.fires.length;
+    const fireStations = this.city.getServiceBuildings().filter(s => s.type === 'fire').length;
+    const fireStationsNeeded = Math.ceil(totalDevelopedZones * COMPLAINT_THRESHOLDS.FIRE_STATIONS_PER_ZONE);
+    const fireCoverage = fireStationsNeeded > 0 ? fireStations / fireStationsNeeded : 1;
+
+    // Active fires greatly increase complaint, poor coverage increases it moderately
+    this.voterComplaints.fire = Math.min(100, Math.round(
+      activeFireCount * 20 + (1 - Math.min(1, fireCoverage)) * 30
+    ));
+
+    // 3. HOUSING COSTS - high land values make housing expensive
+    // Also affected by distance from R zones to C/I zones (simplified)
+    const avgLandValue = this.stats.averageLandValue;
+    const housingPressure = avgLandValue > COMPLAINT_THRESHOLDS.HOUSING_LAND_VALUE_HIGH
+      ? (avgLandValue - COMPLAINT_THRESHOLDS.HOUSING_LAND_VALUE_HIGH) / 80
+      : 0;
+
+    // Check R zone distance to jobs (simplified: ratio of R to C+I)
+    const rToJobRatio = zoneCounts.residential.developed /
+      Math.max(1, zoneCounts.commercial.developed + zoneCounts.industrial.developed);
+    const distancePenalty = rToJobRatio > 2 ? (rToJobRatio - 2) * 10 : 0;
+
+    this.voterComplaints.housingCosts = Math.min(100, Math.round(
+      housingPressure * 50 + distancePenalty
+    ));
+
+    // 4. POLLUTION - based on average pollution level
+    this.voterComplaints.pollution = Math.min(100, Math.round(
+      (this.stats.pollutionLevel / COMPLAINT_THRESHOLDS.POLLUTION_ACCEPTABLE) * 20
+    ));
+
+    // 5. TAXES - based on tax rate vs optimal
+    const taxRate = this.budget.taxRate;
+    if (taxRate <= COMPLAINT_THRESHOLDS.TAX_OPTIMAL) {
+      this.voterComplaints.taxes = 0;
+    } else if (taxRate <= COMPLAINT_THRESHOLDS.TAX_HIGH) {
+      // Gradual increase from optimal to high
+      this.voterComplaints.taxes = Math.round(
+        ((taxRate - COMPLAINT_THRESHOLDS.TAX_OPTIMAL) /
+         (COMPLAINT_THRESHOLDS.TAX_HIGH - COMPLAINT_THRESHOLDS.TAX_OPTIMAL)) * 40
+      );
+    } else {
+      // Major complaints above high threshold
+      this.voterComplaints.taxes = Math.min(100, 40 + (taxRate - COMPLAINT_THRESHOLDS.TAX_HIGH) * 10);
+    }
+
+    // 6. TRAFFIC - based on average traffic on roads
+    this.voterComplaints.traffic = Math.min(100, Math.round(
+      (this.stats.averageTraffic / COMPLAINT_THRESHOLDS.TRAFFIC_ACCEPTABLE) * 20
+    ));
+
+    // 7. UNEMPLOYMENT - jobs vs population ratio
+    // Need enough jobs for the population
+    const totalJobs = stats.commercialJobs + stats.industrialJobs;
+    const jobsPerPerson = this.population > 0 ? totalJobs / this.population : 1;
+
+    if (jobsPerPerson >= COMPLAINT_THRESHOLDS.UNEMPLOYMENT_RATIO) {
+      this.voterComplaints.unemployment = 0;
+    } else {
+      // Unemployment increases as job ratio decreases
+      this.voterComplaints.unemployment = Math.min(100, Math.round(
+        (1 - jobsPerPerson / COMPLAINT_THRESHOLDS.UNEMPLOYMENT_RATIO) * 80
+      ));
+    }
+
+    // Calculate unemployment rate for stats
+    this.stats.unemploymentRate = this.population > 0
+      ? Math.max(0, 100 - (totalJobs / this.population) * 100)
+      : 0;
+  }
+
+  // Check if voters are satisfied (all complaints below threshold)
+  areVotersSatisfied() {
+    return Object.values(this.voterComplaints).every(
+      complaint => complaint < VOTER_SATISFACTION_THRESHOLD
+    );
+  }
+
+  // Get overall approval rating (100 - average complaint)
+  getApprovalRating() {
+    const complaints = Object.values(this.voterComplaints);
+    const avgComplaint = complaints.reduce((a, b) => a + b, 0) / complaints.length;
+    return Math.round(100 - avgComplaint);
+  }
+
+  // Get voter complaints for UI display
+  getVoterComplaints() {
+    return {
+      ...this.voterComplaints,
+      approvalRating: this.getApprovalRating(),
+      satisfied: this.areVotersSatisfied()
     };
   }
 

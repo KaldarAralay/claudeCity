@@ -492,6 +492,129 @@ Projected Cash Flow: $${summary.projectedCashFlow.toLocaleString()}`);
     this.showGraphsDialog();
   }
 
+  // Show voter opinion window
+  showVoterOpinion() {
+    this.showVoterOpinionDialog();
+  }
+
+  // Create and show voter opinion dialog
+  showVoterOpinionDialog() {
+    // Remove existing dialog if any
+    const existing = document.getElementById('voter-dialog');
+    if (existing) existing.remove();
+
+    const complaints = this.simulation.getVoterComplaints();
+
+    // Helper function to get complaint bar color
+    const getBarColor = (value) => {
+      if (value < 20) return '#00AA00'; // Green - Good
+      if (value < 40) return '#AAAA00'; // Yellow - Warning
+      if (value < 60) return '#FF8800'; // Orange - Concern
+      return '#AA0000'; // Red - Bad
+    };
+
+    // Helper function to get status text
+    const getStatus = (value) => {
+      if (value < 20) return 'Good';
+      if (value < 40) return 'Fair';
+      if (value < 60) return 'Poor';
+      return 'Critical';
+    };
+
+    const dialog = document.createElement('div');
+    dialog.id = 'voter-dialog';
+    dialog.className = 'win95-dialog';
+    dialog.innerHTML = `
+      <div class="win95-title-bar" style="-webkit-app-region: no-drag;">
+        <div class="win95-title-bar-text">Voter Opinion</div>
+        <div class="win95-title-bar-controls">
+          <button class="win95-title-btn win95-title-btn-close" id="voter-close-btn">X</button>
+        </div>
+      </div>
+      <div class="win95-dialog-content" style="padding: 15px; min-width: 350px;">
+        <div style="text-align: center; margin-bottom: 15px; padding: 10px; background: ${complaints.satisfied ? '#C0FFC0' : '#FFC0C0'}; border: 2px inset #808080;">
+          <div style="font-size: 14px; font-weight: bold;">Approval Rating</div>
+          <div style="font-size: 24px; font-weight: bold; color: ${complaints.approvalRating >= 50 ? '#006600' : '#660000'};">
+            ${complaints.approvalRating}%
+          </div>
+          <div style="font-size: 11px; color: #666;">
+            ${complaints.satisfied ? 'Voters are satisfied!' : 'Voters have concerns'}
+          </div>
+        </div>
+
+        <div style="font-weight: bold; margin-bottom: 8px; border-bottom: 1px solid #808080; padding-bottom: 4px;">
+          Voter Complaints
+        </div>
+
+        <div class="complaint-row" style="display: flex; align-items: center; margin: 6px 0;">
+          <div style="width: 100px;">Crime:</div>
+          <div style="flex: 1; height: 16px; background: #333; border: 1px inset #808080; position: relative;">
+            <div style="height: 100%; width: ${complaints.crime}%; background: ${getBarColor(complaints.crime)};"></div>
+          </div>
+          <div style="width: 60px; text-align: right; font-size: 11px;">${complaints.crime}% ${getStatus(complaints.crime)}</div>
+        </div>
+
+        <div class="complaint-row" style="display: flex; align-items: center; margin: 6px 0;">
+          <div style="width: 100px;">Fire:</div>
+          <div style="flex: 1; height: 16px; background: #333; border: 1px inset #808080; position: relative;">
+            <div style="height: 100%; width: ${complaints.fire}%; background: ${getBarColor(complaints.fire)};"></div>
+          </div>
+          <div style="width: 60px; text-align: right; font-size: 11px;">${complaints.fire}% ${getStatus(complaints.fire)}</div>
+        </div>
+
+        <div class="complaint-row" style="display: flex; align-items: center; margin: 6px 0;">
+          <div style="width: 100px;">Housing:</div>
+          <div style="flex: 1; height: 16px; background: #333; border: 1px inset #808080; position: relative;">
+            <div style="height: 100%; width: ${complaints.housingCosts}%; background: ${getBarColor(complaints.housingCosts)};"></div>
+          </div>
+          <div style="width: 60px; text-align: right; font-size: 11px;">${complaints.housingCosts}% ${getStatus(complaints.housingCosts)}</div>
+        </div>
+
+        <div class="complaint-row" style="display: flex; align-items: center; margin: 6px 0;">
+          <div style="width: 100px;">Pollution:</div>
+          <div style="flex: 1; height: 16px; background: #333; border: 1px inset #808080; position: relative;">
+            <div style="height: 100%; width: ${complaints.pollution}%; background: ${getBarColor(complaints.pollution)};"></div>
+          </div>
+          <div style="width: 60px; text-align: right; font-size: 11px;">${complaints.pollution}% ${getStatus(complaints.pollution)}</div>
+        </div>
+
+        <div class="complaint-row" style="display: flex; align-items: center; margin: 6px 0;">
+          <div style="width: 100px;">Taxes:</div>
+          <div style="flex: 1; height: 16px; background: #333; border: 1px inset #808080; position: relative;">
+            <div style="height: 100%; width: ${complaints.taxes}%; background: ${getBarColor(complaints.taxes)};"></div>
+          </div>
+          <div style="width: 60px; text-align: right; font-size: 11px;">${complaints.taxes}% ${getStatus(complaints.taxes)}</div>
+        </div>
+
+        <div class="complaint-row" style="display: flex; align-items: center; margin: 6px 0;">
+          <div style="width: 100px;">Traffic:</div>
+          <div style="flex: 1; height: 16px; background: #333; border: 1px inset #808080; position: relative;">
+            <div style="height: 100%; width: ${complaints.traffic}%; background: ${getBarColor(complaints.traffic)};"></div>
+          </div>
+          <div style="width: 60px; text-align: right; font-size: 11px;">${complaints.traffic}% ${getStatus(complaints.traffic)}</div>
+        </div>
+
+        <div class="complaint-row" style="display: flex; align-items: center; margin: 6px 0;">
+          <div style="width: 100px;">Unemployment:</div>
+          <div style="flex: 1; height: 16px; background: #333; border: 1px inset #808080; position: relative;">
+            <div style="height: 100%; width: ${complaints.unemployment}%; background: ${getBarColor(complaints.unemployment)};"></div>
+          </div>
+          <div style="width: 60px; text-align: right; font-size: 11px;">${complaints.unemployment}% ${getStatus(complaints.unemployment)}</div>
+        </div>
+
+        <div style="margin-top: 15px; font-size: 10px; color: #666; border-top: 1px solid #808080; padding-top: 8px;">
+          Keep all complaints below 20% to satisfy voters.
+        </div>
+      </div>
+    `;
+    document.body.appendChild(dialog);
+
+    // Add event listener for close button
+    dialog.querySelector('#voter-close-btn').addEventListener('click', () => {
+      dialog.remove();
+    });
+  }
+
   // Create and show graphs dialog
   showGraphsDialog() {
     // Remove existing dialog if any

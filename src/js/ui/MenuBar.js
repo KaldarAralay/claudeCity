@@ -156,6 +156,9 @@ class MenuBar {
       case 'population':
         this.game.showPopulation();
         break;
+      case 'voter-opinion':
+        this.game.showVoterOpinion();
+        break;
       case 'overlay-power':
         this.game.setOverlay('power');
         break;

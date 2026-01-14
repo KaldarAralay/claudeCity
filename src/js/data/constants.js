@@ -222,6 +222,33 @@ const POLLUTION_VALUES = {
   NUCLEAR_WASTE: 250  // Nuclear meltdown
 };
 
+// Voter Complaints - percentages below 20% means voters are satisfied
+const VOTER_COMPLAINTS = {
+  // Complaint types
+  CRIME: 'crime',
+  FIRE: 'fire',
+  HOUSING_COSTS: 'housingCosts',
+  POLLUTION: 'pollution',
+  TAXES: 'taxes',
+  TRAFFIC: 'traffic',
+  UNEMPLOYMENT: 'unemployment'
+};
+
+// Complaint thresholds - below these values, complaint is minimized
+const COMPLAINT_THRESHOLDS = {
+  CRIME_ACCEPTABLE: 30,         // Average crime level considered acceptable
+  FIRE_STATIONS_PER_ZONE: 0.02, // Fire stations needed per developed zone
+  HOUSING_LAND_VALUE_HIGH: 120, // Land value above this causes housing cost complaints
+  POLLUTION_ACCEPTABLE: 40,     // Average pollution level considered acceptable
+  TAX_OPTIMAL: 7,               // Optimal tax rate (no complaints)
+  TAX_HIGH: 10,                 // Above this, major complaints
+  TRAFFIC_ACCEPTABLE: 80,       // Average traffic on roads considered acceptable
+  UNEMPLOYMENT_RATIO: 1.0       // Jobs per resident ratio (below = unemployment)
+};
+
+// Voter satisfaction - all complaints below this % means voters happy
+const VOTER_SATISFACTION_THRESHOLD = 20;
+
 // Colors for rendering
 const TILE_COLORS = {
   // Terrain

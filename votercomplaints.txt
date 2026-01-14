@@ -1,0 +1,27 @@
+Voter Complaints
+This section will list some problems presented to you by the voters, and what ways these problems can be dealt with. If you get all of the complaints to less than 20% each, you have succeeded in taking the problems far enough under control to have the voters deem it a good enough situation for their mayor to stay in office. Unconfirmed on the NES prototype.
+
+Crime
+This is a serious problem the whole game, so try to keep lots of Police Departments spread out over the landscape. Try to use overlapping coverage so three or four stations have their outer most coverage combined with other stations’ coverage to form a decent security net.
+
+Fire (Complaint)
+If this is considered a problem, you need to work on your disaster recovery skills. Be sure to have good fire coverage, and also bulldoze around the fires to contain them (no fuel = no fire). Fires can only move to squares that are capable of catching fire, like buildings, Roads/Rail, Park, or Forest, and then only squares that are adjacent to it’s sides; Fire cannot move diagonally.
+
+Housing Costs
+Occurs when your land values are too high, and/or Residential Zones are too far from Commercial Zones and/or Industrial Zones. Try to have a few areas of low land values so the people coming to your town have a choice. The other problem, Zones being too far apart, can be addressed by making sure that Zones have an appropriate place nearby to travel. This is a problem you typically want to have, as the beneficial side of it outweighs the complaints. However, it can kill a Challenge Scenario as it affects the overall score.
+
+Pollution
+This is a common problem faced by every city. To make this lessen in severity (it can not be eliminated completely) here are some solutions:
+
+Build Industrial Zones on the edge of the map to have Pollution go off-screen (does not register),
+Use Park where ever you can to raise Land Values and lower Pollution (think Greenzo),
+Use Rail as much as possible (reduces Pollution and Crime), and
+Use Nuclear Power Plants instead of Coal (no Pollution, but risk a meltdown on Medium or Hard).
+Taxes
+The game gives a default setting of 7% to start the game, and that is a good starting point. However, when you need money, the people will start to really complain if you raise it too much. Try to stay around 7% or 8% most of the time so you make a little bit of money from your people, lots overtime. If you need cash desperately, jack up your rate up to some obscene level near the end of the year (two or three months before, as an example) so you take a little bit extra for the fiscal year, then lower back when reviewing the Budget at the end of the year.
+
+Traffic
+The ultimate solution to your traffic woes is to just not build Roads at all, instead using Rails. However, that is an expensive venture, so try for a hybrid combination, and be sure to at least use Rails in the traffic heavy sections of your city (until you can afford to replace all Roads with Rail instead).
+
+Unemployment
+Try to keep more total Industrial and Commercial Zones than Residential Zones, as more Residential than those two put together is where this complaint comes from.
