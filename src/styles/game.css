@@ -68,6 +68,8 @@
   font-size: 12px;
   font-weight: bold;
   image-rendering: pixelated;
+  position: relative;
+  overflow: hidden;
 }
 
 /* Tool Icon Styles */

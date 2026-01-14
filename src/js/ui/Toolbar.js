@@ -10,6 +10,12 @@ class Toolbar {
   }
 
   setupEventListeners() {
+    // Prevent scroll wheel from affecting toolbar
+    this.toolbar.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    }, { passive: false });
+
     // Tool button clicks
     this.toolbar.querySelectorAll('.tool-btn').forEach(btn => {
       btn.addEventListener('click', () => {
