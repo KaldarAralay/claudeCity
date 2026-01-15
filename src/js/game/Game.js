@@ -1019,6 +1019,12 @@ Projected Cash Flow: $${summary.projectedCashFlow.toLocaleString()}`);
       case 'monster':
         this.simulation.triggerMonsterDisaster();
         break;
+      case 'plane':
+        this.simulation.triggerPlaneCrashDisaster();
+        break;
+      case 'ufo':
+        this.simulation.triggerUFODisaster();
+        break;
     }
   }
 

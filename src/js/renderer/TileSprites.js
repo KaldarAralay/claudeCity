@@ -1160,4 +1160,191 @@ class TileSprites {
 
     ctx.restore();
   }
+
+  // Draw airplane
+  drawPlane(ctx, screenX, screenY, scale, dx, dy) {
+    const size = this.tileSize * scale * 1.5;
+
+    ctx.save();
+    ctx.translate(screenX, screenY);
+
+    // Rotate plane to face direction of travel
+    const angle = Math.atan2(dy, dx);
+    ctx.rotate(angle);
+
+    // Fuselage - white/silver
+    ctx.fillStyle = '#E8E8E8';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, size * 0.5, size * 0.12, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Cockpit - dark blue windows
+    ctx.fillStyle = '#000066';
+    ctx.beginPath();
+    ctx.ellipse(size * 0.35, 0, size * 0.12, size * 0.08, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Wings
+    ctx.fillStyle = '#D0D0D0';
+    ctx.beginPath();
+    ctx.moveTo(-size * 0.1, 0);
+    ctx.lineTo(-size * 0.2, -size * 0.4);
+    ctx.lineTo(size * 0.1, -size * 0.35);
+    ctx.lineTo(size * 0.15, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(-size * 0.1, 0);
+    ctx.lineTo(-size * 0.2, size * 0.4);
+    ctx.lineTo(size * 0.1, size * 0.35);
+    ctx.lineTo(size * 0.15, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    // Tail fin
+    ctx.fillStyle = '#C0C0C0';
+    ctx.beginPath();
+    ctx.moveTo(-size * 0.4, 0);
+    ctx.lineTo(-size * 0.5, -size * 0.2);
+    ctx.lineTo(-size * 0.35, -size * 0.15);
+    ctx.lineTo(-size * 0.35, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    // Tail horizontal stabilizers
+    ctx.beginPath();
+    ctx.moveTo(-size * 0.4, 0);
+    ctx.lineTo(-size * 0.5, -size * 0.12);
+    ctx.lineTo(-size * 0.35, -size * 0.08);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(-size * 0.4, 0);
+    ctx.lineTo(-size * 0.5, size * 0.12);
+    ctx.lineTo(-size * 0.35, size * 0.08);
+    ctx.closePath();
+    ctx.fill();
+
+    // Engine pods under wings
+    ctx.fillStyle = '#888';
+    ctx.beginPath();
+    ctx.ellipse(0, -size * 0.22, size * 0.08, size * 0.04, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(0, size * 0.22, size * 0.08, size * 0.04, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Red stripe on fuselage
+    ctx.strokeStyle = '#CC0000';
+    ctx.lineWidth = size * 0.03;
+    ctx.beginPath();
+    ctx.moveTo(-size * 0.35, 0);
+    ctx.lineTo(size * 0.25, 0);
+    ctx.stroke();
+
+    // Shadow
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+    ctx.beginPath();
+    ctx.ellipse(size * 0.1, size * 0.5, size * 0.4, size * 0.1, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  // Draw UFO (flying saucer)
+  drawUFO(ctx, screenX, screenY, scale, animFrame = 0) {
+    const size = this.tileSize * scale * 1.5;
+
+    ctx.save();
+    ctx.translate(screenX, screenY);
+
+    // Hover wobble animation
+    const wobble = Math.sin(animFrame * 0.3) * size * 0.03;
+
+    // Shadow on ground
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.beginPath();
+    ctx.ellipse(0, size * 0.4, size * 0.35, size * 0.08, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Main saucer body - metallic silver
+    ctx.fillStyle = '#B8B8B8';
+    ctx.beginPath();
+    ctx.ellipse(0, wobble, size * 0.4, size * 0.12, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Top dome - glass/tinted
+    ctx.fillStyle = '#4488AA';
+    ctx.beginPath();
+    ctx.ellipse(0, wobble - size * 0.08, size * 0.18, size * 0.12, 0, Math.PI, Math.PI * 2);
+    ctx.fill();
+
+    // Dome highlight
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.beginPath();
+    ctx.ellipse(-size * 0.05, wobble - size * 0.12, size * 0.06, size * 0.04, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Saucer rim - darker edge
+    ctx.strokeStyle = '#888';
+    ctx.lineWidth = size * 0.02;
+    ctx.beginPath();
+    ctx.ellipse(0, wobble, size * 0.4, size * 0.12, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Bottom details - engine glow
+    ctx.fillStyle = '#666';
+    ctx.beginPath();
+    ctx.ellipse(0, wobble + size * 0.05, size * 0.2, size * 0.04, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Blinking lights around rim
+    const numLights = 8;
+    for (let i = 0; i < numLights; i++) {
+      const angle = (i / numLights) * Math.PI * 2 + animFrame * 0.1;
+      const lx = Math.cos(angle) * size * 0.35;
+      const ly = Math.sin(angle) * size * 0.08 + wobble;
+
+      // Alternate colors and blinking
+      const isOn = ((i + Math.floor(animFrame * 0.2)) % 3) !== 0;
+      if (isOn) {
+        ctx.fillStyle = i % 2 === 0 ? '#FF0000' : '#00FF00';
+        ctx.beginPath();
+        ctx.arc(lx, ly, size * 0.025, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Glow effect
+        ctx.fillStyle = i % 2 === 0 ? 'rgba(255, 0, 0, 0.3)' : 'rgba(0, 255, 0, 0.3)';
+        ctx.beginPath();
+        ctx.arc(lx, ly, size * 0.05, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Attack beam (when attacking)
+    if (animFrame % 10 < 5) {
+      ctx.fillStyle = 'rgba(0, 255, 100, 0.3)';
+      ctx.beginPath();
+      ctx.moveTo(-size * 0.1, wobble + size * 0.1);
+      ctx.lineTo(size * 0.1, wobble + size * 0.1);
+      ctx.lineTo(size * 0.25, size * 0.5);
+      ctx.lineTo(-size * 0.25, size * 0.5);
+      ctx.closePath();
+      ctx.fill();
+
+      // Inner beam
+      ctx.fillStyle = 'rgba(100, 255, 150, 0.5)';
+      ctx.beginPath();
+      ctx.moveTo(-size * 0.05, wobble + size * 0.1);
+      ctx.lineTo(size * 0.05, wobble + size * 0.1);
+      ctx.lineTo(size * 0.15, size * 0.5);
+      ctx.lineTo(-size * 0.15, size * 0.5);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
 }

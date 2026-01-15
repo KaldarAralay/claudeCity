@@ -140,6 +140,21 @@ class Renderer {
       const screenPos = this.camera.tileToScreen(tornado.x, tornado.y);
       this.sprites.drawTornado(this.ctx, screenPos.x, screenPos.y, scale, this.animFrame);
     }
+
+    // Draw plane
+    if (disasters.plane && !disasters.plane.crashed) {
+      const plane = disasters.plane;
+      const screenPos = this.camera.tileToScreen(plane.x, plane.y);
+      this.sprites.drawPlane(this.ctx, screenPos.x, screenPos.y, scale, plane.dx, plane.dy);
+    }
+
+    // Draw UFOs
+    if (disasters.ufos && disasters.ufos.length > 0) {
+      for (const ufo of disasters.ufos) {
+        const screenPos = this.camera.tileToScreen(ufo.x, ufo.y);
+        this.sprites.drawUFO(this.ctx, screenPos.x, screenPos.y, scale, this.animFrame);
+      }
+    }
   }
 
   // Draw overlay for a tile

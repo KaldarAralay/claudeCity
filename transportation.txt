@@ -1,0 +1,44 @@
+Transit (Roads and Rails)
+Roads are cheaper, both in up-front costs and maintenance. Rails cost twice as much to both build and to maintain. Citizens do not differentiate between the two types of Transit tiles, meaning that even if you put tiles in an alternating fashion, the Citizens can still travel along the entire length without trouble.
+
+A Road or Rail crossover tile (with the other transit tile type) is functionally identical to a plain Rail tile. A power line crossover allows the road or rail to act like a tile that can take power and stops deterioration. Appearances of these crossovers don't actually matter, but it can look ugly depending on the order you build things. Roads and Rails require yearly maintenance, including Road or Rails built over the water, with cost depending on difficulty. Without 100% funding, there is a chance for each existing tile to deteriorate, but power line crossovers on transit tiles stop this requirement. Theoretically, you could do Power Lines over Rail in the entire city and cut funding to zero without any Rail deterioration. Needs to be confirmed.
+
+Game Difficulty
+
+Estimated Maintenance Cost/Road
+
+Formula Maintenance Cost/Road
+
+NOTES
+
+Easy
+
+$0.7
+
+179/256
+
+◦ One Rail is equal to Two Roads.
+◦ Estimated Maintenance Cost is accurate within 1% of the Formula Maintenance Cost, so it makes for a very accurate estimation tool.
+
+Normal
+
+$0.9
+
+230/256
+
+Hard
+
+$1.2
+
+307/256
+
+NOTE: After totaling the costs, any fraction of a dollar will be rounded down.
+
+
+Five types of buildings desire some form of transportation, see the respective entries in this section for what they need/use Transit for:
+
+Residential Zones
+Commercial Zones
+Industrial Zones
+Police Departments
+Fire Departments

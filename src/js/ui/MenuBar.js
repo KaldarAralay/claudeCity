@@ -144,6 +144,12 @@ class MenuBar {
       case 'monster':
         this.game.triggerDisaster('monster');
         break;
+      case 'plane':
+        this.game.triggerDisaster('plane');
+        break;
+      case 'ufo':
+        this.game.triggerDisaster('ufo');
+        break;
       case 'disable-disasters':
         this.game.toggleDisasters();
         this.updateCheckmark('disable-disasters', this.game.disastersDisabled);

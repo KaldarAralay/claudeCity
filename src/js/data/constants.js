@@ -506,10 +506,10 @@ const SCENARIOS = {
     mapType: 'lasVegas',
     isBonus: true,
     scheduledDisasters: [
-      { type: 'tornado', month: 60 },  // UFO attacks as tornado-like
-      { type: 'tornado', month: 240 },
-      { type: 'tornado', month: 480 },
-      { type: 'tornado', month: 720 }
+      { type: 'ufo', month: 60 },
+      { type: 'ufo', month: 240 },
+      { type: 'ufo', month: 480 },
+      { type: 'ufo', month: 720 }
     ]
   },
 

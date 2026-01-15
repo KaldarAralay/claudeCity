@@ -195,6 +195,12 @@ class Simulation {
       case 'meltdown':
         this.triggerNuclearMeltdown();
         break;
+      case 'plane':
+        this.triggerPlaneCrashDisaster();
+        break;
+      case 'ufo':
+        this.triggerUFODisaster();
+        break;
     }
   }
 
@@ -1170,7 +1176,9 @@ class Simulation {
   activeDisasters = {
     fires: [],      // [{x, y, age}]
     monster: null,  // {x, y, dx, dy, hp}
-    tornado: null   // {x, y, dx, dy, lifetime}
+    tornado: null,  // {x, y, dx, dy, lifetime}
+    plane: null,    // {x, y, dx, dy, targetX, targetY, crashed}
+    ufos: []        // [{x, y, dx, dy, lifetime, attackCooldown}]
   };
 
   // Start a fire at location
@@ -1204,6 +1212,228 @@ class Simulation {
       return true;
     }
     return false;
+  }
+
+  // Trigger plane crash disaster - plane flies across map and crashes
+  triggerPlaneCrashDisaster() {
+    // Plane starts from a random edge and flies to crash at a random location
+    const edge = Math.floor(Math.random() * 4);
+    let x, y, dx, dy;
+
+    // Pick a random crash target (prefer developed areas)
+    let targetX = Math.floor(Math.random() * this.city.width);
+    let targetY = Math.floor(Math.random() * this.city.height);
+
+    // Try to find a developed area to crash into
+    const candidates = [];
+    for (let ty = 0; ty < this.city.height; ty++) {
+      for (let tx = 0; tx < this.city.width; tx++) {
+        const tile = this.city.tiles[ty][tx];
+        if (tile.isBuilding() || tile.isZone()) {
+          candidates.push({ x: tx, y: ty });
+        }
+      }
+    }
+    if (candidates.length > 0) {
+      const target = candidates[Math.floor(Math.random() * candidates.length)];
+      targetX = target.x;
+      targetY = target.y;
+    }
+
+    // Start from edge, heading toward target
+    switch (edge) {
+      case 0: // Top
+        x = Math.floor(Math.random() * this.city.width);
+        y = -5;
+        break;
+      case 1: // Right
+        x = this.city.width + 5;
+        y = Math.floor(Math.random() * this.city.height);
+        break;
+      case 2: // Bottom
+        x = Math.floor(Math.random() * this.city.width);
+        y = this.city.height + 5;
+        break;
+      case 3: // Left
+        x = -5;
+        y = Math.floor(Math.random() * this.city.height);
+        break;
+    }
+
+    // Calculate direction toward target
+    const angle = Math.atan2(targetY - y, targetX - x);
+    dx = Math.cos(angle) * 2; // Speed of 2 tiles per update
+    dy = Math.sin(angle) * 2;
+
+    this.activeDisasters.plane = {
+      x, y, dx, dy,
+      targetX, targetY,
+      crashed: false
+    };
+  }
+
+  // Update plane movement and crash
+  updatePlane() {
+    const plane = this.activeDisasters.plane;
+    if (!plane) return;
+
+    if (plane.crashed) {
+      // Plane already crashed, remove it
+      this.activeDisasters.plane = null;
+      return;
+    }
+
+    // Move plane
+    plane.x += plane.dx;
+    plane.y += plane.dy;
+
+    // Check if plane reached crash target (within 2 tiles)
+    const distToTarget = Math.sqrt(
+      Math.pow(plane.x - plane.targetX, 2) +
+      Math.pow(plane.y - plane.targetY, 2)
+    );
+
+    if (distToTarget < 2) {
+      // CRASH! - affects a 1x1 area plus X pattern (5 tiles total)
+      plane.crashed = true;
+      const crashX = Math.round(plane.targetX);
+      const crashY = Math.round(plane.targetY);
+
+      // X pattern: center + 4 diagonal neighbors
+      const crashPattern = [
+        { dx: 0, dy: 0 },   // Center
+        { dx: -1, dy: -1 }, // Top-left
+        { dx: 1, dy: -1 },  // Top-right
+        { dx: -1, dy: 1 },  // Bottom-left
+        { dx: 1, dy: 1 }    // Bottom-right
+      ];
+
+      for (const offset of crashPattern) {
+        const tx = crashX + offset.dx;
+        const ty = crashY + offset.dy;
+        const tile = this.city.getTile(tx, ty);
+
+        if (tile && !tile.isWater() && !tile.isEmpty()) {
+          this.city.bulldoze(tx, ty);
+          // 50% chance to start fire, 50% just rubble
+          if (Math.random() < 0.5 && tile.isFlammable()) {
+            this.startFire(tx, ty);
+          } else {
+            tile.type = TILE_TYPES.RUBBLE;
+          }
+        }
+      }
+    }
+
+    // If plane flew way off map without crashing, remove it
+    if (plane.x < -20 || plane.x > this.city.width + 20 ||
+        plane.y < -20 || plane.y > this.city.height + 20) {
+      this.activeDisasters.plane = null;
+    }
+  }
+
+  // Trigger UFO attack disaster - multiple UFOs attack the city
+  triggerUFODisaster() {
+    // Spawn 3-5 UFOs from different directions
+    const numUFOs = 3 + Math.floor(Math.random() * 3);
+
+    for (let i = 0; i < numUFOs; i++) {
+      const edge = Math.floor(Math.random() * 4);
+      let x, y, dx, dy;
+
+      switch (edge) {
+        case 0: // Top
+          x = Math.floor(Math.random() * this.city.width);
+          y = -5;
+          dx = (Math.random() - 0.5) * 2;
+          dy = 1 + Math.random();
+          break;
+        case 1: // Right
+          x = this.city.width + 5;
+          y = Math.floor(Math.random() * this.city.height);
+          dx = -(1 + Math.random());
+          dy = (Math.random() - 0.5) * 2;
+          break;
+        case 2: // Bottom
+          x = Math.floor(Math.random() * this.city.width);
+          y = this.city.height + 5;
+          dx = (Math.random() - 0.5) * 2;
+          dy = -(1 + Math.random());
+          break;
+        case 3: // Left
+          x = -5;
+          y = Math.floor(Math.random() * this.city.height);
+          dx = 1 + Math.random();
+          dy = (Math.random() - 0.5) * 2;
+          break;
+      }
+
+      this.activeDisasters.ufos.push({
+        x, y, dx, dy,
+        lifetime: 40 + Math.floor(Math.random() * 30),
+        attackCooldown: 0
+      });
+    }
+  }
+
+  // Update UFO movements and attacks
+  updateUFOs() {
+    for (let i = this.activeDisasters.ufos.length - 1; i >= 0; i--) {
+      const ufo = this.activeDisasters.ufos[i];
+
+      // Move UFO
+      ufo.x += ufo.dx;
+      ufo.y += ufo.dy;
+
+      // Occasionally change direction (erratic movement)
+      if (Math.random() < 0.1) {
+        ufo.dx += (Math.random() - 0.5) * 0.5;
+        ufo.dy += (Math.random() - 0.5) * 0.5;
+        // Clamp speed
+        ufo.dx = Math.max(-2, Math.min(2, ufo.dx));
+        ufo.dy = Math.max(-2, Math.min(2, ufo.dy));
+      }
+
+      // Keep UFO somewhat in bounds (can go slightly off)
+      if (ufo.x < -10) ufo.dx = Math.abs(ufo.dx);
+      if (ufo.x > this.city.width + 10) ufo.dx = -Math.abs(ufo.dx);
+      if (ufo.y < -10) ufo.dy = Math.abs(ufo.dy);
+      if (ufo.y > this.city.height + 10) ufo.dy = -Math.abs(ufo.dy);
+
+      // Attack - spray disrupters on area below
+      ufo.attackCooldown--;
+      if (ufo.attackCooldown <= 0 && ufo.x >= 0 && ufo.x < this.city.width &&
+          ufo.y >= 0 && ufo.y < this.city.height) {
+        // Attack a 3x3 area
+        const attackX = Math.floor(ufo.x);
+        const attackY = Math.floor(ufo.y);
+
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            const tx = attackX + dx;
+            const ty = attackY + dy;
+            const tile = this.city.getTile(tx, ty);
+
+            if (tile && !tile.isWater() && !tile.isEmpty() && Math.random() < 0.4) {
+              this.city.bulldoze(tx, ty);
+              // UFOs mostly cause fires (70%) or rubble (30%)
+              if (Math.random() < 0.7) {
+                this.startFire(tx, ty);
+              } else {
+                tile.type = TILE_TYPES.RUBBLE;
+              }
+            }
+          }
+        }
+        ufo.attackCooldown = 3 + Math.floor(Math.random() * 3); // Attack every 3-6 ticks
+      }
+
+      // Decrease lifetime
+      ufo.lifetime--;
+      if (ufo.lifetime <= 0) {
+        this.activeDisasters.ufos.splice(i, 1);
+      }
+    }
   }
 
   // Update active fires (spread and burn out)
@@ -1455,6 +1685,8 @@ class Simulation {
     this.updateFires();
     this.updateMonster();
     this.updateTornado();
+    this.updatePlane();
+    this.updateUFOs();
 
     // Floods slowly recede
     for (let y = 0; y < this.city.height; y++) {
