@@ -443,8 +443,10 @@ class Simulation {
   }
 
   // Update demand based on city state (SimCity-style RCI model)
+  // Difficulty affects: effective tax rate perception, industrial demand multiplier
   updateDemand() {
     const stats = this.city.getZoneStats();
+    const difficultySettings = this.budget.difficultySettings;
 
     // Use actual jobs from commercial and industrial zones
     const totalJobs = stats.commercialJobs + stats.industrialJobs;
@@ -492,11 +494,21 @@ class Simulation {
       )
     );
 
-    // Tax rate affects all demand (7% is optimal)
-    const taxPenalty = (this.budget.taxRate - 7) * 0.03;
+    // Apply difficulty industrial demand multiplier (Easy: x1.2, Normal: x1.1, Hard: x0.98)
+    this.industrialDemand *= difficultySettings.industrialDemandMultiplier;
+
+    // Tax rate affects all demand - use effective tax rate based on difficulty
+    // Easy: 7% neutral, Normal: 6% neutral, Hard: 5% neutral
+    const effectiveTaxRate = this.budget.getEffectiveTaxRate();
+    const taxPenalty = (effectiveTaxRate - 7) * 0.03;
     this.residentialDemand -= taxPenalty;
     this.commercialDemand -= taxPenalty;
     this.industrialDemand -= taxPenalty * 0.5; // Industry less affected by taxes
+
+    // Clamp demands to valid range
+    this.residentialDemand = Math.min(DEMAND_FACTORS.MAX_DEMAND, Math.max(DEMAND_FACTORS.MIN_DEMAND, this.residentialDemand));
+    this.commercialDemand = Math.min(DEMAND_FACTORS.MAX_DEMAND, Math.max(DEMAND_FACTORS.MIN_DEMAND, this.commercialDemand));
+    this.industrialDemand = Math.min(DEMAND_FACTORS.MAX_DEMAND, Math.max(DEMAND_FACTORS.MIN_DEMAND, this.industrialDemand));
   }
 
   // Update traffic on roads based on nearby zones
@@ -546,58 +558,128 @@ class Simulation {
     }
   }
 
-  // Update pollution from industrial zones and power plants
+  // Update pollution using NES SimCity 2x2 grid diffusion system
+  // Each tile adds pollution to its 2x2 square, then diffusion spreads it
   updatePollution() {
-    // Reset pollution
-    for (let y = 0; y < this.city.height; y++) {
-      for (let x = 0; x < this.city.width; x++) {
-        this.city.tiles[y][x].pollution = 0;
-      }
-    }
+    const width = this.city.width;
+    const height = this.city.height;
 
-    // Industrial zones create pollution
-    for (let y = 0; y < this.city.height; y++) {
-      for (let x = 0; x < this.city.width; x++) {
+    // Create 2x2 pollution grid (half the resolution of the tile grid)
+    // Each 2x2 square covers 4 tiles
+    const gridWidth = Math.ceil(width / 2);
+    const gridHeight = Math.ceil(height / 2);
+    let pollutionGrid = new Array(gridHeight).fill(0).map(() => new Array(gridWidth).fill(0));
+
+    // Phase 1: Add pollution sources to 2x2 grid
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
         const tile = this.city.tiles[y][x];
+        const gridX = Math.floor(x / 2);
+        const gridY = Math.floor(y / 2);
+        let pollutionValue = 0;
 
-        if (tile.isMainTile && tile.isIndustrial() && tile.isBuilding()) {
-          // Industrial pollution scales with level (50 base per NES guide, +10 per level)
-          const pollutionStrength = 40 + tile.level * 10;
-          this.spreadPollution(x, y, pollutionStrength, 8);
+        // Nuclear waste sets the 2x2 to maximum
+        if (tile.isNuclearWaste()) {
+          pollutionGrid[gridY][gridX] = POLLUTION_VALUES.NUCLEAR_WASTE;
+          continue;
         }
 
-        // Power plants also pollute
-        if (tile.isMainTile && tile.type === TILE_TYPES.COAL_POWER) {
-          this.spreadPollution(x, y, 80, 12);
+        // Industrial zones - each tile contributes (developed zones only)
+        if (tile.isIndustrial() && tile.isBuilding()) {
+          pollutionValue = POLLUTION_VALUES.INDUSTRIAL;
+        }
+
+        // Coal power plant - each tile contributes
+        if (tile.type === TILE_TYPES.COAL_POWER) {
+          pollutionValue = POLLUTION_VALUES.COAL_POWER;
+        }
+
+        // Seaport - each tile contributes
+        if (tile.type === TILE_TYPES.SEAPORT) {
+          pollutionValue = POLLUTION_VALUES.SEAPORT;
+        }
+
+        // Airport - each tile contributes
+        if (tile.type === TILE_TYPES.AIRPORT) {
+          pollutionValue = POLLUTION_VALUES.AIRPORT;
+        }
+
+        // Active fire
+        if (tile.isBurning()) {
+          pollutionValue = POLLUTION_VALUES.FIRE;
+        }
+
+        // Add to 2x2 grid
+        if (pollutionValue > 0) {
+          pollutionGrid[gridY][gridX] = Math.min(
+            POLLUTION_DIFFUSION.MAX_VALUE,
+            pollutionGrid[gridY][gridX] + pollutionValue
+          );
         }
       }
     }
 
-    // Traffic also creates pollution (simplified)
-    for (let y = 0; y < this.city.height; y++) {
-      for (let x = 0; x < this.city.width; x++) {
+    // Phase 2: Apply diffusion (25% to self and adjacent, done twice)
+    for (let pass = 0; pass < POLLUTION_DIFFUSION.PASSES; pass++) {
+      pollutionGrid = this.diffusePollution(pollutionGrid, gridWidth, gridHeight);
+    }
+
+    // Phase 3: Map 2x2 grid back to tiles
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const gridX = Math.floor(x / 2);
+        const gridY = Math.floor(y / 2);
+        this.city.tiles[y][x].pollution = Math.floor(pollutionGrid[gridY][gridX]);
+      }
+    }
+
+    // Calculate average pollution for stats
+    let totalPollution = 0;
+    let buildingCount = 0;
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
         const tile = this.city.tiles[y][x];
-        if (tile.isRoad() && tile.traffic > 50) {
-          this.spreadPollution(x, y, tile.traffic / 10, 3);
+        if (tile.isBuilding()) {
+          totalPollution += tile.pollution;
+          buildingCount++;
         }
       }
     }
+    this.stats.pollutionLevel = buildingCount > 0 ? totalPollution / buildingCount : 0;
   }
 
-  // Spread pollution from a source
-  spreadPollution(sourceX, sourceY, strength, radius) {
-    for (let dy = -radius; dy <= radius; dy++) {
-      for (let dx = -radius; dx <= radius; dx++) {
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist <= radius) {
-          const tile = this.city.getTile(sourceX + dx, sourceY + dy);
-          if (tile) {
-            const amount = Math.floor(strength * (1 - dist / radius));
-            tile.pollution = Math.min(255, tile.pollution + amount);
-          }
+  // Diffusion: Add 25% of each cell's value to itself and adjacent cells
+  diffusePollution(grid, width, height) {
+    const factor = POLLUTION_DIFFUSION.FACTOR;
+    const newGrid = new Array(height).fill(0).map(() => new Array(width).fill(0));
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const value = grid[y][x];
+        if (value === 0) continue;
+
+        const contribution = value * factor;
+
+        // Add to self
+        newGrid[y][x] = Math.min(POLLUTION_DIFFUSION.MAX_VALUE, newGrid[y][x] + contribution);
+
+        // Add to adjacent cells (N, S, E, W)
+        if (y > 0) {
+          newGrid[y - 1][x] = Math.min(POLLUTION_DIFFUSION.MAX_VALUE, newGrid[y - 1][x] + contribution);
+        }
+        if (y < height - 1) {
+          newGrid[y + 1][x] = Math.min(POLLUTION_DIFFUSION.MAX_VALUE, newGrid[y + 1][x] + contribution);
+        }
+        if (x > 0) {
+          newGrid[y][x - 1] = Math.min(POLLUTION_DIFFUSION.MAX_VALUE, newGrid[y][x - 1] + contribution);
+        }
+        if (x < width - 1) {
+          newGrid[y][x + 1] = Math.min(POLLUTION_DIFFUSION.MAX_VALUE, newGrid[y][x + 1] + contribution);
         }
       }
     }
+
+    return newGrid;
   }
 
   // Update land values based on NES SimCity mechanics
@@ -1199,6 +1281,150 @@ class Simulation {
         const tile = this.city.tiles[y][x];
         if (tile.isFlooded() && Math.random() < 0.1) {
           tile.type = TILE_TYPES.EMPTY;
+        }
+      }
+    }
+
+    // Nuclear waste slowly decays (very slowly)
+    for (let y = 0; y < this.city.height; y++) {
+      for (let x = 0; x < this.city.width; x++) {
+        const tile = this.city.tiles[y][x];
+        if (tile.isNuclearWaste() && Math.random() < 0.01) {
+          tile.type = TILE_TYPES.RUBBLE;
+        }
+      }
+    }
+
+    // Random disaster triggering based on difficulty
+    this.checkRandomDisaster();
+  }
+
+  // Check for random disaster based on difficulty settings
+  checkRandomDisaster() {
+    const difficultySettings = this.budget.difficultySettings;
+
+    // Roll for disaster
+    if (Math.random() >= difficultySettings.disasterFrequency) return;
+
+    // Determine which disaster
+    if (!difficultySettings.allDisastersEnabled) {
+      // Easy mode: only plane crashes and shipwrecks (simplified as small fires near airport/seaport)
+      this.triggerMinorDisaster();
+    } else {
+      // Normal/Hard: All disasters possible
+      const disasterTypes = ['fire', 'flood', 'tornado', 'earthquake'];
+
+      // Nuclear meltdown only on Normal/Hard with nuclear plants
+      if (difficultySettings.nuclearMeltdownEnabled) {
+        const hasNuclearPlant = this.city.getPowerPlants().some(p => p.type === 'nuclear-power');
+        if (hasNuclearPlant) {
+          disasterTypes.push('meltdown');
+        }
+      }
+
+      // Add monster for variety
+      disasterTypes.push('monster');
+
+      const disasterType = disasterTypes[Math.floor(Math.random() * disasterTypes.length)];
+
+      switch (disasterType) {
+        case 'fire':
+          this.triggerFireDisaster();
+          break;
+        case 'flood':
+          this.triggerFloodDisaster();
+          break;
+        case 'tornado':
+          this.triggerTornadoDisaster();
+          break;
+        case 'earthquake':
+          this.triggerEarthquakeDisaster();
+          break;
+        case 'monster':
+          this.triggerMonsterDisaster();
+          break;
+        case 'meltdown':
+          this.triggerNuclearMeltdown();
+          break;
+      }
+    }
+  }
+
+  // Trigger minor disaster (plane crash / shipwreck - simplified as small fires)
+  triggerMinorDisaster() {
+    // Find airport or seaport
+    const candidates = [];
+    for (let y = 0; y < this.city.height; y++) {
+      for (let x = 0; x < this.city.width; x++) {
+        const tile = this.city.tiles[y][x];
+        if (tile.type === TILE_TYPES.AIRPORT || tile.type === TILE_TYPES.SEAPORT) {
+          candidates.push({ x, y });
+        }
+      }
+    }
+
+    if (candidates.length > 0) {
+      const target = candidates[Math.floor(Math.random() * candidates.length)];
+      // Start a small fire nearby
+      for (let dy = -2; dy <= 2; dy++) {
+        for (let dx = -2; dx <= 2; dx++) {
+          const tile = this.city.getTile(target.x + dx, target.y + dy);
+          if (tile && tile.isFlammable() && Math.random() < 0.2) {
+            this.startFire(target.x + dx, target.y + dy);
+            return;
+          }
+        }
+      }
+    }
+  }
+
+  // Trigger nuclear meltdown - the dreaded disaster!
+  triggerNuclearMeltdown() {
+    // Find nuclear power plants
+    const nuclearPlants = [];
+    for (let y = 0; y < this.city.height; y++) {
+      for (let x = 0; x < this.city.width; x++) {
+        const tile = this.city.tiles[y][x];
+        if (tile.type === TILE_TYPES.NUCLEAR_POWER && tile.isMainTile) {
+          nuclearPlants.push({ x, y, building: this.city.buildings.get(tile.buildingId) });
+        }
+      }
+    }
+
+    if (nuclearPlants.length === 0) return;
+
+    // Pick a random nuclear plant
+    const plant = nuclearPlants[Math.floor(Math.random() * nuclearPlants.length)];
+    const building = plant.building;
+
+    if (!building) return;
+
+    // Convert plant to nuclear waste and rubble
+    for (let dy = 0; dy < building.height; dy++) {
+      for (let dx = 0; dx < building.width; dx++) {
+        const tile = this.city.getTile(plant.x + dx, plant.y + dy);
+        if (tile) {
+          // Center tiles become nuclear waste, edges become rubble
+          if (dx >= 1 && dx < building.width - 1 && dy >= 1 && dy < building.height - 1) {
+            tile.type = TILE_TYPES.NUCLEAR_WASTE;
+          } else {
+            tile.type = TILE_TYPES.RUBBLE;
+          }
+          tile.buildingId = null;
+          tile.isMainTile = false;
+        }
+      }
+    }
+
+    // Remove building from registry
+    this.city.buildings.delete(plant.building?.id);
+
+    // Start fires around the meltdown
+    for (let dy = -3; dy <= building.height + 2; dy++) {
+      for (let dx = -3; dx <= building.width + 2; dx++) {
+        const tile = this.city.getTile(plant.x + dx, plant.y + dy);
+        if (tile && tile.isFlammable() && Math.random() < 0.4) {
+          this.startFire(plant.x + dx, plant.y + dy);
         }
       }
     }

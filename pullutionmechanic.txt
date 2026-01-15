@@ -1,0 +1,46 @@
+Pollution Mechanics
+The following are the sources of Pollution in the game, and how much of an effect they have on Land Values. I have changed several areas here, as the NES prototype seemed to react much differently than other versions, in that Roads do not seem to create Pollution or Crime.
+
+Source
+
+Effect
+
+Road traffic (light)
+
+0 (10)
+
+Road traffic (heavy)
+
+0 (25)
+
+Industrial Zone (developed)
+
+50
+
+Coal Power
+
+60
+
+Seaport
+
+60
+
+Airport
+
+60
+
+Fire
+
+60
+
+Nuclear Waste
+
+250
+
+Each existing tile adds its "value" of pollution to the 2x2 squares they reside in. This is then diffused twice to spread the pollution to surrounding tiles. Each tile of building counts as a separate tile that adds pollution; An Industrial Zone has 9 tiles (each producing pollution), so 200 goes in one 2x2, 100 goes in two 2x2, and 50 goes in one 2x2, as an example. This has a side effect when Zone stacking these buildings, as it actually reduces pollution. Since Zone stacking can be done using the Debug Mode on the NES prototype, I left this in.
+
+A single tile of nuclear waste sets the temporary value for pollution on the 2x2 square to 250, the highest value allowed by the game engine.
+
+The diffusion for Pollution is to add 1/4 (25%) of the current value to itself, and to adjacent tiles. The diffusion formula is applied twice. This effectively means that 5/16 (31.25%) of the original value is used on the same 2x2 square, 1/8 (12.5%) on the eight surrounding 2x2 squares, and 1/16 (6.25%) on the four 2x2 squares just two spots north, south, east, and west of the original 2x2 squares.
+
+Anything diffused off of the map does not get diffused back onto the map, but this only has the effect of anything on the edge of the map will only pollute its own 2x2 square by 4/16 (25%) of the original value, and anything on a corner will pollute itself by 3/16 (18.75%) of the original value. As far as benefit to nearby zones go, this has no effect, as the only zone that could benefit is the one making the pollution in the first place.

@@ -361,22 +361,132 @@ class Game {
     }
   }
 
-  // Create new city
+  // Create new city - shows difficulty selection dialog
   newCity() {
+    this.showDifficultyDialog();
+  }
+
+  // Start a new city with the selected difficulty
+  startNewCity(difficulty) {
     this.simulation.pause();
     this.city = new City();
     this.city.generateTerrain();
-    this.budget = new Budget();
+    this.budget = new Budget(difficulty);
     this.simulation = new Simulation(this.city, this.budget);
     this.simulation.onTick = (data) => this.onSimulationTick(data);
     this.renderer.city = this.city;
     this.minimap.city = this.city;
     this.simulation.start();
     this.updateUI();
+    this.updateWindowTitle(null); // Reset title
     this.renderer.centerOn(
       Math.floor(this.city.width / 2),
       Math.floor(this.city.height / 2)
     );
+  }
+
+  // Show difficulty selection dialog
+  showDifficultyDialog() {
+    // Remove existing dialog if any
+    const existing = document.getElementById('difficulty-dialog');
+    if (existing) existing.remove();
+
+    const dialog = document.createElement('div');
+    dialog.id = 'difficulty-dialog';
+    dialog.className = 'win95-dialog';
+    dialog.innerHTML = `
+      <div class="win95-title-bar" style="-webkit-app-region: no-drag;">
+        <div class="win95-title-bar-text">Select Difficulty</div>
+        <div class="win95-title-bar-controls">
+          <button class="win95-title-btn win95-title-btn-close" id="difficulty-close-btn">X</button>
+        </div>
+      </div>
+      <div class="win95-dialog-content" style="padding: 20px; min-width: 300px;">
+        <div style="text-align: center; margin-bottom: 15px; font-weight: bold;">
+          Choose your difficulty level:
+        </div>
+
+        <div class="difficulty-option" data-difficulty="easy" style="
+          padding: 12px;
+          margin: 8px 0;
+          background: #C0C0C0;
+          border: 2px solid;
+          border-color: #FFFFFF #808080 #808080 #FFFFFF;
+          cursor: pointer;
+        ">
+          <div style="font-weight: bold; color: #008000;">Easy</div>
+          <div style="font-size: 11px; margin-top: 4px;">
+            Starting Funds: $20,000<br>
+            Full tax income, boosted industry<br>
+            Rare disasters (planes/ships only)
+          </div>
+        </div>
+
+        <div class="difficulty-option" data-difficulty="normal" style="
+          padding: 12px;
+          margin: 8px 0;
+          background: #C0C0C0;
+          border: 2px solid;
+          border-color: #FFFFFF #808080 #808080 #FFFFFF;
+          cursor: pointer;
+        ">
+          <div style="font-weight: bold; color: #000080;">Normal</div>
+          <div style="font-size: 11px; margin-top: 4px;">
+            Starting Funds: $10,000<br>
+            85.7% tax income, slight industry boost<br>
+            Occasional disasters (all types)
+          </div>
+        </div>
+
+        <div class="difficulty-option" data-difficulty="hard" style="
+          padding: 12px;
+          margin: 8px 0;
+          background: #C0C0C0;
+          border: 2px solid;
+          border-color: #FFFFFF #808080 #808080 #FFFFFF;
+          cursor: pointer;
+        ">
+          <div style="font-weight: bold; color: #800000;">Hard</div>
+          <div style="font-size: 11px; margin-top: 4px;">
+            Starting Funds: $5,000<br>
+            57.1% tax income, reduced industry<br>
+            Frequent disasters (including meltdowns!)
+          </div>
+        </div>
+
+        <div style="margin-top: 15px; text-align: center;">
+          <button class="win95-button" id="difficulty-cancel-btn" style="padding: 4px 20px;">Cancel</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(dialog);
+
+    // Add hover effects
+    dialog.querySelectorAll('.difficulty-option').forEach(option => {
+      option.addEventListener('mouseenter', () => {
+        option.style.borderColor = '#808080 #FFFFFF #FFFFFF #808080';
+        option.style.background = '#D0D0D0';
+      });
+      option.addEventListener('mouseleave', () => {
+        option.style.borderColor = '#FFFFFF #808080 #808080 #FFFFFF';
+        option.style.background = '#C0C0C0';
+      });
+      option.addEventListener('click', () => {
+        const difficulty = option.dataset.difficulty;
+        dialog.remove();
+        this.startNewCity(difficulty);
+      });
+    });
+
+    // Close button
+    dialog.querySelector('#difficulty-close-btn').addEventListener('click', () => {
+      dialog.remove();
+    });
+
+    // Cancel button
+    dialog.querySelector('#difficulty-cancel-btn').addEventListener('click', () => {
+      dialog.remove();
+    });
   }
 
   // Save city (quick save to current file, or Save As if no file)

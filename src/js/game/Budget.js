@@ -1,8 +1,10 @@
 // Budget.js - City finances and budget management
 
 class Budget {
-  constructor() {
-    this.funds = GAME_CONSTANTS.STARTING_FUNDS;
+  constructor(difficulty = DIFFICULTY.EASY) {
+    this.difficulty = difficulty;
+    this.difficultySettings = DIFFICULTY_SETTINGS[difficulty];
+    this.funds = this.difficultySettings.startingFunds;
     this.taxRate = GAME_CONSTANTS.DEFAULT_TAX_RATE;
 
     // Income tracking
@@ -46,11 +48,25 @@ class Budget {
   }
 
   // Calculate monthly taxes based on population
+  // Difficulty affects tax yield (Easy: 100%, Normal: 85.7%, Hard: 57.1%)
   calculateTaxes(population) {
     // Tax per capita adjusted by tax rate
     const basePerCapita = 0.5;
-    this.taxIncome = Math.floor(population * basePerCapita * (this.taxRate / 100));
+    const baseTax = population * basePerCapita * (this.taxRate / 100);
+    // Apply difficulty tax multiplier
+    this.taxIncome = Math.floor(baseTax * this.difficultySettings.taxMultiplier);
     return this.taxIncome;
+  }
+
+  // Get the effective tax rate for RCI demand calculation
+  // Higher difficulty makes the same tax rate feel higher to citizens
+  getEffectiveTaxRate() {
+    const neutralRate = this.difficultySettings.taxNeutralRate;
+    // Adjust tax rate relative to difficulty's neutral rate
+    // If neutral is 7 (easy), 7% = 7% effective
+    // If neutral is 6 (normal), 7% = 8% effective
+    // If neutral is 5 (hard), 7% = 9% effective
+    return this.taxRate + (7 - neutralRate);
   }
 
   // Calculate maintenance costs
@@ -161,6 +177,7 @@ class Budget {
   // Serialize for save
   serialize() {
     return {
+      difficulty: this.difficulty,
       funds: this.funds,
       taxRate: this.taxRate,
       policeFunding: this.policeFunding,
@@ -172,8 +189,10 @@ class Budget {
 
   // Deserialize from save
   static deserialize(data) {
-    const budget = new Budget();
+    const budget = new Budget(data.difficulty || DIFFICULTY.EASY);
     Object.assign(budget, data);
+    // Ensure difficulty settings are properly loaded
+    budget.difficultySettings = DIFFICULTY_SETTINGS[budget.difficulty];
     return budget;
   }
 }

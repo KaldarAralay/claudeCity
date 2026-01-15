@@ -1,15 +1,57 @@
 // Game Constants for ClaudeCity
 
+// Difficulty levels
+const DIFFICULTY = {
+  EASY: 'easy',
+  NORMAL: 'normal',
+  HARD: 'hard'
+};
+
+// Difficulty settings (NES SimCity accurate)
+const DIFFICULTY_SETTINGS = {
+  easy: {
+    name: 'Easy',
+    startingFunds: 20000,
+    taxMultiplier: 1.0,        // 100% of tax haul
+    taxNeutralRate: 7,         // 7% is neutral for RCI
+    industrialDemandMultiplier: 1.2,  // x1.2 boost
+    disasterFrequency: 0.001,  // Almost never
+    allDisastersEnabled: false, // Only plane crashes and shipwrecks
+    nuclearMeltdownEnabled: false
+  },
+  normal: {
+    name: 'Normal',
+    startingFunds: 10000,
+    taxMultiplier: 0.857,      // 85.7% of tax haul
+    taxNeutralRate: 6,         // 6% is neutral (7% feels like 8%)
+    industrialDemandMultiplier: 1.1,  // x1.1 boost
+    disasterFrequency: 0.005,  // Sometimes
+    allDisastersEnabled: true,
+    nuclearMeltdownEnabled: true
+  },
+  hard: {
+    name: 'Hard',
+    startingFunds: 5000,
+    taxMultiplier: 0.571,      // 57.1% of tax haul
+    taxNeutralRate: 5,         // 5% is neutral (7% feels like 9%)
+    industrialDemandMultiplier: 0.98, // x0.98 slight decrease
+    disasterFrequency: 0.015,  // Frequently
+    allDisastersEnabled: true,
+    nuclearMeltdownEnabled: true
+  }
+};
+
 const GAME_CONSTANTS = {
   // Map settings
   MAP_WIDTH: 120,
   MAP_HEIGHT: 120,
   TILE_SIZE: 16,
 
-  // Starting values
+  // Starting values (default - overridden by difficulty)
   STARTING_FUNDS: 20000,
   STARTING_YEAR: 1900,
   STARTING_MONTH: 0, // January
+  DEFAULT_DIFFICULTY: DIFFICULTY.EASY,
 
   // Tax settings
   MIN_TAX_RATE: 0,
@@ -101,7 +143,8 @@ const TILE_TYPES = {
   AIRPORT: 36,
   RUBBLE: 99,
   FIRE_BURNING: 100,
-  FLOOD: 101
+  FLOOD: 101,
+  NUCLEAR_WASTE: 102  // From nuclear meltdown - max pollution
 };
 
 // Zone development levels - based on NES SimCity mechanics
@@ -212,14 +255,29 @@ const COMMERCIAL_LAND_VALUE_REQUIREMENTS = {
   5: 160    // C-TOP: Need 160+ land value (High class)
 };
 
-// Pollution sources and their values (from guide)
+// Pollution sources and their values per tile (NES SimCity accurate)
+// Each tile of a building contributes pollution to its 2x2 square
 const POLLUTION_VALUES = {
-  INDUSTRIAL: 50,     // Per industrial zone
-  COAL_POWER: 60,     // Coal power plant
-  SEAPORT: 60,        // Seaport
-  AIRPORT: 60,        // Airport
-  FIRE: 60,           // Active fire
-  NUCLEAR_WASTE: 250  // Nuclear meltdown
+  INDUSTRIAL: 50,       // Per tile of developed industrial zone (9 tiles = 450 total)
+  COAL_POWER: 60,       // Per tile of coal power plant (16 tiles)
+  SEAPORT: 60,          // Per tile of seaport (16 tiles)
+  AIRPORT: 60,          // Per tile of airport (36 tiles)
+  FIRE: 60,             // Active fire tile
+  NUCLEAR_WASTE: 250,   // Nuclear meltdown - sets 2x2 to max 250
+  TRAFFIC_LIGHT: 0,     // Light traffic (NES version: no pollution from roads)
+  TRAFFIC_HEAVY: 0      // Heavy traffic (NES version: no pollution from roads)
+};
+
+// Pollution diffusion settings (NES SimCity accurate)
+// Diffusion applies 25% to self and adjacent 2x2 squares, done twice
+const POLLUTION_DIFFUSION = {
+  FACTOR: 0.25,           // 25% diffusion per pass
+  PASSES: 2,              // Number of diffusion passes
+  // After 2 passes:
+  // - Same square: 31.25% of original
+  // - 8 adjacent squares: 12.5% of original
+  // - 4 far squares (N/S/E/W): 6.25% of original
+  MAX_VALUE: 255          // Maximum pollution value
 };
 
 // Voter Complaints - percentages below 20% means voters are satisfied

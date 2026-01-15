@@ -1,0 +1,26 @@
+Game Difficulty Mechanics
+The amount of cash you start with when beginning a new city is very obvious, as the game will tell you outright how much money you're getting when selecting difficulty ($20,000 - Easy, $10,000 Normal, $5,000 - Hard). However, difficulty also has effects on other aspects of SimCity, making various changes in mechanics.
+
+
+Disasters
+Easy has a limited list of naturally occurring Disasters, and those are Plane Crashes and Shipwrecks. Medium and Hard difficulties can have any and all Disasters happen (including the dreaded Nuclear Meltdown!), with Normal having Disasters less frequently than Hard. Exact mechanics on how frequently the Disasters occur on these settings is not 100% understood at present.
+
+Easy - Almost never
+Normal - Sometimes
+Hard – Frequently
+NOTE: Scenarios are set to Easy, but they have Disasters that occur at set intervals.
+
+Taxes
+This Percentage listing indicates how much of your Tax haul the game actually gives you. For example, say you would take in $2800 in taxes for the year, Easy would yield a return of $2800, but on Normal the return is only $2400, while on Hard the total gained is a mere $1600. The game calculates based on the following:
+
+Easy - 100%
+Normal - 85.7%
+Hard - 57.1%
+As if the reduced money wasn't enough, the game treats your Tax Rate as being higher than it actually is when determining the RCI Meter demands. 7% Taxes on Easy is considered "neutral" to the RCI Meter, so to maintain that on higher difficulties, you would need 6% on Medium, or 5% on Hard. Keeping 7% Taxes on Hard harms your RCI Meter much like 9% taxes on Easy, which is a somewhat bad strain on demands.
+
+Industrial Zone demand adjustments
+Counting Taxes as if they were higher than they really are is bad, but the I part of the RCI Meter is further adjusted in regards to your Game Difficulty setting. Easy and Normal makes things work a bit easier in your favor, while hard suffers a slight decrease.
+
+Easy - x1.2
+Normal - x1.1
+Hard - x0.98

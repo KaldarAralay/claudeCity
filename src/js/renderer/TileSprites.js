@@ -59,6 +59,12 @@ class TileSprites {
       case TILE_TYPES.RUBBLE:
         this.drawRubble(ctx);
         break;
+      case TILE_TYPES.NUCLEAR_WASTE:
+        this.drawNuclearWaste(ctx);
+        break;
+      case TILE_TYPES.FLOOD:
+        this.drawFlood(ctx);
+        break;
       case TILE_TYPES.ZONE_RESIDENTIAL:
         this.drawZone(ctx, '#90EE90', 'R');
         break;
@@ -238,6 +244,51 @@ class TileSprites {
     ctx.fillStyle = '#A0522D';
     ctx.fillRect(4, 3, 3, 3);
     ctx.fillRect(1, 11, 4, 2);
+  }
+
+  // Draw nuclear waste - glowing green toxic waste
+  drawNuclearWaste(ctx) {
+    // Dark contaminated ground
+    ctx.fillStyle = '#2A2A20';
+    ctx.fillRect(0, 0, this.tileSize, this.tileSize);
+
+    // Toxic green pools
+    ctx.fillStyle = '#00FF00';
+    ctx.fillRect(3, 3, 5, 4);
+    ctx.fillRect(8, 7, 6, 5);
+    ctx.fillRect(2, 10, 4, 3);
+
+    // Glowing effect
+    ctx.fillStyle = '#80FF80';
+    ctx.fillRect(4, 4, 2, 2);
+    ctx.fillRect(10, 9, 2, 2);
+
+    // Radiation symbol hint
+    ctx.fillStyle = '#FFFF00';
+    ctx.fillRect(7, 2, 2, 2);
+
+    // Bubbles
+    ctx.fillStyle = '#00CC00';
+    ctx.fillRect(5, 8, 1, 1);
+    ctx.fillRect(12, 11, 1, 1);
+  }
+
+  // Draw flood water
+  drawFlood(ctx) {
+    // Murky flood water
+    ctx.fillStyle = '#3A6090';
+    ctx.fillRect(0, 0, this.tileSize, this.tileSize);
+
+    // Water ripples
+    ctx.fillStyle = '#5080B0';
+    ctx.fillRect(2, 3, 4, 1);
+    ctx.fillRect(8, 7, 5, 1);
+    ctx.fillRect(1, 11, 6, 1);
+
+    // Debris floating
+    ctx.fillStyle = '#8B7355';
+    ctx.fillRect(10, 2, 3, 2);
+    ctx.fillRect(3, 8, 2, 2);
   }
 
   // Draw zone placeholder

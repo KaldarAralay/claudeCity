@@ -65,6 +65,10 @@ class Tile {
     return this.type === TILE_TYPES.RUBBLE;
   }
 
+  isNuclearWaste() {
+    return this.type === TILE_TYPES.NUCLEAR_WASTE;
+  }
+
   isZone() {
     return this.type === TILE_TYPES.ZONE_RESIDENTIAL ||
            this.type === TILE_TYPES.ZONE_COMMERCIAL ||
