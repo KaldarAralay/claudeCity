@@ -17,7 +17,10 @@ const DIFFICULTY_SETTINGS = {
     industrialDemandMultiplier: 1.2,  // x1.2 boost
     disasterFrequency: 0.001,  // Almost never
     allDisastersEnabled: false, // Only plane crashes and shipwrecks
-    nuclearMeltdownEnabled: false
+    nuclearMeltdownEnabled: false,
+    roadMaintenanceCost: 0.7,  // $0.7 per road tile per year (179/256)
+    railMaintenanceCost: 1.4,  // $1.4 per rail tile per year (rail = 2x road)
+    deteriorationChance: 0.02  // 2% chance per tile when underfunded
   },
   normal: {
     name: 'Normal',
@@ -27,7 +30,10 @@ const DIFFICULTY_SETTINGS = {
     industrialDemandMultiplier: 1.1,  // x1.1 boost
     disasterFrequency: 0.005,  // Sometimes
     allDisastersEnabled: true,
-    nuclearMeltdownEnabled: true
+    nuclearMeltdownEnabled: true,
+    roadMaintenanceCost: 0.9,  // $0.9 per road tile per year (230/256)
+    railMaintenanceCost: 1.8,  // $1.8 per rail tile per year (rail = 2x road)
+    deteriorationChance: 0.03  // 3% chance per tile when underfunded
   },
   hard: {
     name: 'Hard',
@@ -37,7 +43,10 @@ const DIFFICULTY_SETTINGS = {
     industrialDemandMultiplier: 0.98, // x0.98 slight decrease
     disasterFrequency: 0.015,  // Frequently
     allDisastersEnabled: true,
-    nuclearMeltdownEnabled: true
+    nuclearMeltdownEnabled: true,
+    roadMaintenanceCost: 1.2,  // $1.2 per road tile per year (307/256)
+    railMaintenanceCost: 2.4,  // $2.4 per rail tile per year (rail = 2x road)
+    deteriorationChance: 0.05  // 5% chance per tile when underfunded
   }
 };
 

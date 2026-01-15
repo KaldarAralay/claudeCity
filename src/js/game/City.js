@@ -443,18 +443,23 @@ class City {
   }
 
   // Place a power line
+  // Power lines can cross over roads and rails, creating a crossover that:
+  // 1. Conducts power
+  // 2. Still functions as road/rail
+  // 3. Protects the road/rail from deterioration when underfunded
   placePowerLine(x, y) {
     const tile = this.getTile(x, y);
     if (!tile) return false;
 
-    if (tile.canBuildOn() || tile.isRoad()) {
-      // Power line on road creates special combo
-      if (tile.isRoad()) {
-        // Keep as road but mark as having power line
-        tile.powered = true;
-      } else {
-        tile.type = TILE_TYPES.POWER_LINE;
-      }
+    if (tile.canBuildOn()) {
+      // Normal power line placement on empty/forest
+      tile.type = TILE_TYPES.POWER_LINE;
+      return true;
+    } else if (tile.isRoad() || tile.isRail()) {
+      // Power line crosses over road/rail
+      // Keep the road/rail type but mark as having power line crossover
+      tile.powerLineCrossover = true;
+      tile.powered = true; // Crossovers conduct power
       return true;
     }
     return false;

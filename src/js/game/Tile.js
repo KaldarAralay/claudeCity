@@ -22,6 +22,7 @@ class Tile {
     this.fireRisk = 0;            // Fire risk 0-255
     this.population = 0;          // Population for residential tiles
     this.jobs = 0;                // Jobs for commercial/industrial tiles
+    this.powerLineCrossover = false; // True if power line crosses over this road/rail
   }
 
   // Check if tile is empty or can be bulldozed
@@ -116,7 +117,9 @@ class Tile {
            this.isPowerLine() ||
            this.isZone() ||
            this.isBuilding() ||
-           this.isSpecialBuilding();
+           this.isSpecialBuilding() ||
+           this.isRail() ||              // Rails with power crossovers conduct
+           this.powerLineCrossover;       // Any tile with power line crossover conducts
   }
 
   // Check if tile provides road access
@@ -155,6 +158,7 @@ class Tile {
     this.buildingHeight = 1;
     this.population = 0;
     this.jobs = 0;
+    this.powerLineCrossover = false;
   }
 
   // Set as zone
@@ -327,7 +331,8 @@ class Tile {
       landValue: this.landValue,
       pollution: this.pollution,
       population: this.population,
-      jobs: this.jobs
+      jobs: this.jobs,
+      powerLineCrossover: this.powerLineCrossover
     };
   }
 

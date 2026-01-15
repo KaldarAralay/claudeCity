@@ -999,6 +999,92 @@ class TileSprites {
     }
   }
 
+  // Draw power line crossover on top of road or rail
+  // Power poles at edges of tile with wires crossing over
+  drawPowerLineCrossover(ctx, screenX, screenY, scale) {
+    const size = this.tileSize * scale;
+
+    // Power poles on sides
+    ctx.fillStyle = '#4A3728';
+
+    // Left pole
+    ctx.fillRect(screenX + size * 0.08, screenY + size * 0.2, size * 0.08, size * 0.6);
+    // Right pole
+    ctx.fillRect(screenX + size * 0.84, screenY + size * 0.2, size * 0.08, size * 0.6);
+
+    // Cross beams at top
+    ctx.fillRect(screenX + size * 0.02, screenY + size * 0.2, size * 0.2, size * 0.06);
+    ctx.fillRect(screenX + size * 0.78, screenY + size * 0.2, size * 0.2, size * 0.06);
+
+    // Wires spanning across
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = Math.max(1, scale);
+    ctx.beginPath();
+    // Top wire
+    ctx.moveTo(screenX, screenY + size * 0.23);
+    ctx.lineTo(screenX + size, screenY + size * 0.23);
+    // Bottom wire (slight sag)
+    ctx.moveTo(screenX, screenY + size * 0.28);
+    ctx.quadraticCurveTo(screenX + size / 2, screenY + size * 0.35, screenX + size, screenY + size * 0.28);
+    ctx.stroke();
+
+    // Insulators
+    ctx.fillStyle = '#666';
+    ctx.fillRect(screenX + size * 0.1, screenY + size * 0.18, size * 0.04, size * 0.08);
+    ctx.fillRect(screenX + size * 0.86, screenY + size * 0.18, size * 0.04, size * 0.08);
+  }
+
+  // Draw rail with proper connections and optional power line crossover
+  drawRailConnected(ctx, city, x, y, screenX, screenY, scale, hasCrossover = false) {
+    const size = this.tileSize * scale;
+
+    // Check adjacent tiles for rails
+    const hasNorth = city.getTile(x, y - 1)?.isRail();
+    const hasSouth = city.getTile(x, y + 1)?.isRail();
+    const hasEast = city.getTile(x + 1, y)?.isRail();
+    const hasWest = city.getTile(x - 1, y)?.isRail();
+
+    // Ground base
+    ctx.fillStyle = '#8B7355';
+    ctx.fillRect(screenX, screenY, size, size);
+
+    const railWidth = size * 0.7;
+    const railOffset = (size - railWidth) / 2;
+
+    // Draw rail ties
+    ctx.fillStyle = '#4A3728';
+
+    // Vertical rails
+    if (hasNorth || hasSouth || (!hasEast && !hasWest)) {
+      for (let ty = 0; ty < size; ty += size * 0.25) {
+        ctx.fillRect(screenX + railOffset, screenY + ty, railWidth, size * 0.12);
+      }
+    }
+
+    // Horizontal rails
+    if (hasEast || hasWest) {
+      for (let tx = 0; tx < size; tx += size * 0.25) {
+        ctx.fillRect(screenX + tx, screenY + railOffset, size * 0.12, railWidth);
+      }
+    }
+
+    // Rail tracks - steel
+    ctx.fillStyle = '#666';
+    if (hasNorth || hasSouth || (!hasEast && !hasWest)) {
+      ctx.fillRect(screenX + railOffset + size * 0.05, screenY, size * 0.12, size);
+      ctx.fillRect(screenX + railOffset + railWidth - size * 0.17, screenY, size * 0.12, size);
+    }
+    if (hasEast || hasWest) {
+      ctx.fillRect(screenX, screenY + railOffset + size * 0.05, size, size * 0.12);
+      ctx.fillRect(screenX, screenY + railOffset + railWidth - size * 0.17, size, size * 0.12);
+    }
+
+    // Draw power line crossover if present
+    if (hasCrossover) {
+      this.drawPowerLineCrossover(ctx, screenX, screenY, scale);
+    }
+  }
+
   // Draw monster (Bowser-like creature)
   drawMonster(ctx, screenX, screenY, scale) {
     const size = this.tileSize * scale * 2; // Monster is 2x2 tiles

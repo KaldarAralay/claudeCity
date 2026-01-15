@@ -268,6 +268,7 @@ class Simulation {
     this.updateDemand();
     this.updateLandValues();
     this.updateServices();
+    this.updateTransportDeterioration();
     this.updateDisasters();
     this.calculateVoterComplaints();
 
@@ -1036,6 +1037,58 @@ class Simulation {
     this.stats.pollutionLevel = buildingCount > 0 ? totalPollution / buildingCount : 0;
     this.stats.averageLandValue = buildingCount > 0 ? totalLandValue / buildingCount : 0;
     this.stats.averageTraffic = roadCount > 0 ? totalTraffic / roadCount : 0;
+  }
+
+  // Update transport infrastructure deterioration when funding is below 100%
+  // Roads and rails can decay to rubble if underfunded
+  // Power line crossovers protect roads/rails from deterioration
+  updateTransportDeterioration() {
+    const transportFunding = this.budget.transportFunding;
+
+    // Only deteriorate if funding is below 100%
+    if (transportFunding >= 100) return;
+
+    const difficultySettings = this.budget.difficultySettings;
+    const deteriorationChance = difficultySettings.deteriorationChance;
+
+    // Calculate actual deterioration probability based on funding deficit
+    // At 0% funding: full deterioration chance
+    // At 50% funding: half deterioration chance
+    // At 100% funding: no deterioration
+    const fundingDeficit = (100 - transportFunding) / 100;
+    const actualChance = deteriorationChance * fundingDeficit;
+
+    // Check each road and rail tile
+    for (let y = 0; y < this.city.height; y++) {
+      for (let x = 0; x < this.city.width; x++) {
+        const tile = this.city.tiles[y][x];
+
+        // Only process roads and rails
+        if (!tile.isRoad() && !tile.isRail()) continue;
+
+        // Power line crossover protection - roads/rails under power lines don't deteriorate
+        if (this.hasPowerLineCrossover(x, y)) continue;
+
+        // Roll for deterioration
+        if (Math.random() < actualChance) {
+          // Road/rail deteriorates to rubble
+          tile.type = TILE_TYPES.RUBBLE;
+          tile.clear();
+          tile.type = TILE_TYPES.RUBBLE;
+        }
+      }
+    }
+  }
+
+  // Check if a road/rail tile has power line crossing over it
+  // In NES SimCity, power lines can cross over roads/rails and protect them
+  hasPowerLineCrossover(x, y) {
+    const tile = this.city.getTile(x, y);
+    if (!tile) return false;
+
+    // Check if this tile has the powerLineCrossover flag set
+    // This flag is set when a power line is placed over existing road/rail
+    return tile.powerLineCrossover === true;
   }
 
   // Get date string

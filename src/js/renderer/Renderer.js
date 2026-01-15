@@ -89,6 +89,21 @@ class Renderer {
             screenPos.y,
             scale
           );
+          // Draw power line crossover on top of road if present
+          if (tile.powerLineCrossover) {
+            this.sprites.drawPowerLineCrossover(this.ctx, screenPos.x, screenPos.y, scale);
+          }
+        } else if (tile.isRail()) {
+          // Draw rail with connected pattern and optional crossover
+          this.sprites.drawRailConnected(
+            this.ctx,
+            this.city,
+            x, y,
+            screenPos.x,
+            screenPos.y,
+            scale,
+            tile.powerLineCrossover
+          );
         } else {
           this.sprites.drawTile(this.ctx, tile, screenPos.x, screenPos.y, scale);
         }

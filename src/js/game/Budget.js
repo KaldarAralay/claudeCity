@@ -70,16 +70,19 @@ class Budget {
   }
 
   // Calculate maintenance costs
+  // Uses difficulty-based road/rail costs
   calculateMaintenance(city) {
     const infra = city.countInfrastructure();
     const services = city.getServiceBuildings();
     const powerPlants = city.getPowerPlants();
 
-    // Road maintenance
-    this.roadExpense = Math.floor(infra.roads * MAINTENANCE_COSTS.road * (this.transportFunding / 100) / 12);
+    // Road maintenance - uses difficulty-based cost per tile per year
+    // Easy: $0.7, Normal: $0.9, Hard: $1.2 per road tile per year
+    this.roadExpense = Math.floor(infra.roads * this.difficultySettings.roadMaintenanceCost * (this.transportFunding / 100) / 12);
 
-    // Rail maintenance
-    this.railExpense = Math.floor(infra.rails * MAINTENANCE_COSTS.rail * (this.transportFunding / 100) / 12);
+    // Rail maintenance - uses difficulty-based cost (2x road cost)
+    // Easy: $1.4, Normal: $1.8, Hard: $2.4 per rail tile per year
+    this.railExpense = Math.floor(infra.rails * this.difficultySettings.railMaintenanceCost * (this.transportFunding / 100) / 12);
 
     // Police maintenance
     const policeCount = services.filter(s => s.type === 'police').length;
