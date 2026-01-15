@@ -46,6 +46,7 @@ class Game {
 
     // Create renderer
     this.renderer = new Renderer(this.canvas, this.city);
+    this.renderer.simulation = this.simulation;
 
     // Create minimap
     const minimapCanvas = document.getElementById('minimap-canvas');
@@ -376,6 +377,7 @@ class Game {
     this.simulation = new Simulation(this.city, this.budget);
     this.simulation.onTick = (data) => this.onSimulationTick(data);
     this.renderer.city = this.city;
+    this.renderer.simulation = this.simulation;
     this.minimap.city = this.city;
     this.simulation.start();
     this.updateUI();
@@ -648,6 +650,7 @@ class Game {
 
     // Update references
     this.renderer.city = this.city;
+    this.renderer.simulation = this.simulation;
     this.minimap.city = this.city;
 
     // Start simulation
@@ -879,6 +882,7 @@ class Game {
       this.simulation = Simulation.deserialize(saveData.simulation, this.city, this.budget);
       this.simulation.onTick = (data) => this.onSimulationTick(data);
       this.renderer.city = this.city;
+      this.renderer.simulation = this.simulation;
       this.minimap.city = this.city;
       this.simulation.start();
       this.updateUI();

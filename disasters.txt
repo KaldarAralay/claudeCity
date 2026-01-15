@@ -1,0 +1,44 @@
+Disasters
+This section will outline what each disaster does, how dangerous each one is on a scale of 1-10, and if they can be purposely triggered.
+
+I believe there is a bug and the Nuclear Meltdown notification does not occur. (Noted in Bugs/Glitches Section)
+
+Airplane crash (sic)
+“An airplane crash has started a fire. Don’t let the fire get out of control or the whole city may be lost.”
+A Plane crashes into whatever might be directly below it when the accident occurs. Effects a 1x1 area (five square X) and can potentially cause a fire. Buildings below a crash will be destroyed, but don’t always explode with flames.
+Danger Rating: 3/10
+
+Monster (Bowser) attack (sic)
+“A giant monster has been sighted leveling parts of Tokyo!”
+A Godzilla-like monster stomps through anything that gets in his way! When crossing over buildings, they will either be demolished to rubble or explode in fire.
+Danger Rating: 7/10
+
+Earthquake
+“Your city is being shaken to rubble by an earthquake! We need to be sure any fires are put out and everyone has power.”
+The ground shakes, which can cause wide devastation if it is a big one on the Richter Scale (severity of quake is randomized, needs to be confirmed).
+Danger Rating: 9/10
+
+Fire (Disaster)
+“Have you built a fire department yet? I would strongly suggest doing so before the rest of the city is an ashen ember.”
+A fire breaks out in any spot on the map without the help of outside disasters influences. Literally a fire, it occupies a single 1x1 tile.
+Danger Rating: 2/10
+
+Flood
+“Mr. Mayor! The land is being flooded. Develop-ing the shoreline will help prevent this prob-lem.”
+Water floods over the banks of the body of water in undeveloped waterfront property.
+Danger Rating: 4/10
+
+Nuclear Meltdown
+""
+The fallout will make many surrounding areas unlivable, and the plant has the potential to become a huge fireball. May also be demolished into rubble. This disaster cannot be triggered, but can randomly occur in game if playing on Medium or Hard.
+Danger Rating: 6/10
+
+Tornade (sic)
+“A tornado has been spotted and is causing tremendous damage. I’m afraid the only thing you can do is wait while it destroys everything in its path.”
+A funnel appears on the ground and rampages through your city leaving a trail of destruction and fires.
+Danger Rating: 8/10
+
+U.F.O. Attack
+“?????”
+U.F.O.'s fly down over your town, spray the area with their disrupters, and leave you with lots of burning buildings (if they survive the initial attack, they may still be razed to the ground in the ensuing, out-of-control fires). This disaster cannot be triggered, and may only occur in the Las Vegas bonus scenario.
+Danger Rating: 9/10

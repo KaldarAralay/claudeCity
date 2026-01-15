@@ -998,4 +998,166 @@ class TileSprites {
       ctx.fillRect(screenX + roadOffset, screenY + roadOffset, roadWidth, roadWidth);
     }
   }
+
+  // Draw monster (Bowser-like creature)
+  drawMonster(ctx, screenX, screenY, scale) {
+    const size = this.tileSize * scale * 2; // Monster is 2x2 tiles
+
+    ctx.save();
+    ctx.translate(screenX - size / 4, screenY - size / 2);
+
+    // Body - green dinosaur/dragon
+    ctx.fillStyle = '#228B22';
+    ctx.beginPath();
+    ctx.ellipse(size / 2, size * 0.6, size * 0.35, size * 0.4, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Shell/back spikes
+    ctx.fillStyle = '#8B4513';
+    ctx.beginPath();
+    ctx.moveTo(size * 0.25, size * 0.4);
+    ctx.lineTo(size * 0.35, size * 0.15);
+    ctx.lineTo(size * 0.45, size * 0.35);
+    ctx.lineTo(size * 0.55, size * 0.1);
+    ctx.lineTo(size * 0.65, size * 0.35);
+    ctx.lineTo(size * 0.75, size * 0.2);
+    ctx.lineTo(size * 0.75, size * 0.45);
+    ctx.closePath();
+    ctx.fill();
+
+    // Head
+    ctx.fillStyle = '#228B22';
+    ctx.beginPath();
+    ctx.ellipse(size * 0.75, size * 0.5, size * 0.2, size * 0.18, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Snout
+    ctx.fillStyle = '#32CD32';
+    ctx.beginPath();
+    ctx.ellipse(size * 0.88, size * 0.52, size * 0.1, size * 0.08, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Eye - angry red
+    ctx.fillStyle = '#FF0000';
+    ctx.beginPath();
+    ctx.arc(size * 0.78, size * 0.45, size * 0.05, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.arc(size * 0.79, size * 0.45, size * 0.02, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Horns
+    ctx.fillStyle = '#FFF8DC';
+    ctx.beginPath();
+    ctx.moveTo(size * 0.68, size * 0.38);
+    ctx.lineTo(size * 0.65, size * 0.25);
+    ctx.lineTo(size * 0.72, size * 0.38);
+    ctx.closePath();
+    ctx.fill();
+
+    // Legs
+    ctx.fillStyle = '#228B22';
+    ctx.fillRect(size * 0.3, size * 0.85, size * 0.12, size * 0.15);
+    ctx.fillRect(size * 0.55, size * 0.85, size * 0.12, size * 0.15);
+
+    // Fire breath
+    ctx.fillStyle = '#FF4500';
+    ctx.beginPath();
+    ctx.moveTo(size * 0.95, size * 0.5);
+    ctx.lineTo(size * 1.15, size * 0.45);
+    ctx.lineTo(size * 1.1, size * 0.52);
+    ctx.lineTo(size * 1.2, size * 0.52);
+    ctx.lineTo(size * 1.1, size * 0.58);
+    ctx.lineTo(size * 1.15, size * 0.6);
+    ctx.lineTo(size * 0.95, size * 0.55);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = '#FFD700';
+    ctx.beginPath();
+    ctx.moveTo(size * 0.95, size * 0.5);
+    ctx.lineTo(size * 1.05, size * 0.48);
+    ctx.lineTo(size * 1.0, size * 0.52);
+    ctx.lineTo(size * 1.08, size * 0.52);
+    ctx.lineTo(size * 1.0, size * 0.56);
+    ctx.lineTo(size * 1.05, size * 0.57);
+    ctx.lineTo(size * 0.95, size * 0.55);
+    ctx.closePath();
+    ctx.fill();
+
+    // Shadow under monster
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.beginPath();
+    ctx.ellipse(size / 2, size, size * 0.4, size * 0.1, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  // Draw tornado funnel
+  drawTornado(ctx, screenX, screenY, scale, animFrame = 0) {
+    const size = this.tileSize * scale * 2;
+
+    ctx.save();
+    ctx.translate(screenX - size / 4, screenY - size);
+
+    // Funnel cloud at top
+    ctx.fillStyle = '#444';
+    ctx.beginPath();
+    ctx.ellipse(size / 2, size * 0.1, size * 0.5, size * 0.15, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Main funnel - darker gray, twisted
+    const wobble = Math.sin(animFrame * 0.3) * size * 0.05;
+
+    ctx.fillStyle = '#555';
+    ctx.beginPath();
+    ctx.moveTo(size * 0.1, size * 0.15);
+    ctx.quadraticCurveTo(size * 0.3 + wobble, size * 0.4, size * 0.4, size * 0.7);
+    ctx.lineTo(size * 0.5, size * 1.1);
+    ctx.lineTo(size * 0.6, size * 0.7);
+    ctx.quadraticCurveTo(size * 0.7 - wobble, size * 0.4, size * 0.9, size * 0.15);
+    ctx.closePath();
+    ctx.fill();
+
+    // Inner darker core
+    ctx.fillStyle = '#333';
+    ctx.beginPath();
+    ctx.moveTo(size * 0.25, size * 0.2);
+    ctx.quadraticCurveTo(size * 0.4 + wobble * 0.5, size * 0.45, size * 0.45, size * 0.75);
+    ctx.lineTo(size * 0.5, size * 1.0);
+    ctx.lineTo(size * 0.55, size * 0.75);
+    ctx.quadraticCurveTo(size * 0.6 - wobble * 0.5, size * 0.45, size * 0.75, size * 0.2);
+    ctx.closePath();
+    ctx.fill();
+
+    // Debris particles
+    ctx.fillStyle = '#654321';
+    for (let i = 0; i < 8; i++) {
+      const angle = (animFrame * 0.2 + i * Math.PI / 4);
+      const radius = size * 0.15 + (i % 3) * size * 0.1;
+      const height = size * 0.3 + i * size * 0.08;
+      const px = size / 2 + Math.cos(angle) * radius;
+      const py = height + Math.sin(angle) * size * 0.05;
+      ctx.fillRect(px - 2, py - 2, 4, 4);
+    }
+
+    // Dust cloud at base
+    ctx.fillStyle = 'rgba(139, 119, 101, 0.6)';
+    ctx.beginPath();
+    ctx.ellipse(size / 2, size * 1.1, size * 0.35, size * 0.12, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // More dust
+    ctx.fillStyle = 'rgba(160, 140, 120, 0.4)';
+    ctx.beginPath();
+    ctx.ellipse(size * 0.3, size * 1.05, size * 0.2, size * 0.08, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(size * 0.7, size * 1.08, size * 0.22, size * 0.09, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
 }

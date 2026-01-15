@@ -5,6 +5,7 @@ class Renderer {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     this.city = city;
+    this.simulation = null; // Set by Game.js for disaster rendering
 
     this.camera = new Camera(canvas);
     this.sprites = new TileSprites();
@@ -20,6 +21,9 @@ class Renderer {
 
     // Grid display
     this.showGrid = false;
+
+    // Animation frame counter
+    this.animFrame = 0;
 
     // Resize handling
     this.resizeObserver = new ResizeObserver(() => this.resize());
@@ -106,8 +110,36 @@ class Renderer {
       this.drawPreview();
     }
 
+    // Draw active disasters (monster, tornado)
+    this.drawActiveDisasters();
+
+    // Increment animation frame
+    this.animFrame++;
+
     // Request next frame
     requestAnimationFrame(() => this.render());
+  }
+
+  // Draw active disasters
+  drawActiveDisasters() {
+    if (!this.simulation || !this.simulation.activeDisasters) return;
+
+    const scale = this.camera.zoom;
+    const disasters = this.simulation.activeDisasters;
+
+    // Draw monster
+    if (disasters.monster) {
+      const monster = disasters.monster;
+      const screenPos = this.camera.tileToScreen(monster.x, monster.y);
+      this.sprites.drawMonster(this.ctx, screenPos.x, screenPos.y, scale);
+    }
+
+    // Draw tornado
+    if (disasters.tornado) {
+      const tornado = disasters.tornado;
+      const screenPos = this.camera.tileToScreen(tornado.x, tornado.y);
+      this.sprites.drawTornado(this.ctx, screenPos.x, screenPos.y, scale, this.animFrame);
+    }
   }
 
   // Draw overlay for a tile

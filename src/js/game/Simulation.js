@@ -1286,11 +1286,16 @@ class Simulation {
     const monster = this.activeDisasters.monster;
     if (!monster) return;
 
-    // Destroy current tile
+    // Destroy current tile - monster either demolishes to rubble OR starts a fire
     const tile = this.city.getTile(monster.x, monster.y);
-    if (tile && !tile.isWater() && !tile.isEmpty()) {
+    if (tile && !tile.isWater() && !tile.isEmpty() && !tile.isRubble()) {
       this.city.bulldoze(monster.x, monster.y);
-      tile.type = TILE_TYPES.RUBBLE;
+      // 40% chance to start fire, 60% just rubble
+      if (Math.random() < 0.4 && tile.isFlammable()) {
+        this.startFire(monster.x, monster.y);
+      } else {
+        tile.type = TILE_TYPES.RUBBLE;
+      }
     }
 
     // Move monster
@@ -1337,13 +1342,18 @@ class Simulation {
     const tornado = this.activeDisasters.tornado;
     if (!tornado) return;
 
-    // Destroy tiles in a small radius
+    // Destroy tiles in a small radius - leaves trail of destruction and fires
     for (let dy = -1; dy <= 1; dy++) {
       for (let dx = -1; dx <= 1; dx++) {
         const tile = this.city.getTile(tornado.x + dx, tornado.y + dy);
-        if (tile && !tile.isWater() && !tile.isEmpty() && Math.random() < 0.5) {
+        if (tile && !tile.isWater() && !tile.isEmpty() && !tile.isRubble() && Math.random() < 0.5) {
           this.city.bulldoze(tornado.x + dx, tornado.y + dy);
-          tile.type = TILE_TYPES.RUBBLE;
+          // 30% chance to start fire, 70% just rubble
+          if (Math.random() < 0.3 && tile.isFlammable()) {
+            this.startFire(tornado.x + dx, tornado.y + dy);
+          } else {
+            tile.type = TILE_TYPES.RUBBLE;
+          }
         }
       }
     }
