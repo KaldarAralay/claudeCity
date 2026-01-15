@@ -520,3 +520,29 @@
   text-align: right;
   font-weight: bold;
 }
+
+/* Alert Ticker */
+.alert-ticker {
+  height: 16px;
+  background: #000080;
+  border-bottom: 1px solid var(--win95-shadow);
+  overflow: hidden;
+  position: relative;
+  white-space: nowrap;
+}
+
+.alert-ticker-text {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 16px;
+  line-height: 16px;
+  color: #FFFF00;
+  font-size: 12px;
+  font-weight: bold;
+  font-family: 'MS Sans Serif', Tahoma, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  will-change: transform;
+}

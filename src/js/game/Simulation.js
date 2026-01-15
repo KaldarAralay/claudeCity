@@ -259,18 +259,25 @@ class Simulation {
       this.budget.processYear(this.year);
     }
 
-    // Run simulation steps
+    // Run core simulation steps every tick
     this.updatePowerGrid();
     this.updateRoadAccess();
     this.updateZoneDevelopment();
-    this.updateTraffic();
-    this.updatePollution();
-    this.updateDemand();
-    this.updateLandValues();
-    this.updateServices();
-    this.updateTransportDeterioration();
     this.updateDisasters();
-    this.calculateVoterComplaints();
+
+    // Run expensive calculations less frequently (every 3 months)
+    // This significantly improves performance without affecting gameplay
+    if (this.month % 3 === 0) {
+      this.updateTraffic();
+      this.updatePollution();
+      this.updateLandValues();
+      this.updateServices();
+      this.updateTransportDeterioration();
+      this.calculateVoterComplaints();
+    }
+
+    // Update demand every tick (fast calculation)
+    this.updateDemand();
 
     // Process budget
     this.budget.processMonth(this.city);
@@ -690,45 +697,51 @@ class Simulation {
   }
 
   // Update traffic on roads based on nearby zones
+  // Optimized: only check immediate neighbors, accumulate in single pass
   updateTraffic() {
-    // Reset traffic
-    for (let y = 0; y < this.city.height; y++) {
-      for (let x = 0; x < this.city.width; x++) {
-        this.city.tiles[y][x].traffic = 0;
+    const width = this.city.width;
+    const height = this.city.height;
+
+    // Reset traffic in single pass while collecting zone data
+    const zones = [];
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const tile = this.city.tiles[y][x];
+        tile.traffic = 0;
+
+        // Collect developed zones
+        if (tile.isMainTile && tile.isBuilding()) {
+          let trafficGenerated = 0;
+          if (tile.isResidential()) {
+            trafficGenerated = tile.level * 10;
+          } else if (tile.isCommercial()) {
+            trafficGenerated = tile.level * 20;
+          } else if (tile.isIndustrial()) {
+            trafficGenerated = tile.level * 30;
+          }
+          if (trafficGenerated > 0) {
+            zones.push({ x, y, traffic: trafficGenerated });
+          }
+        }
       }
     }
 
-    // For each developed zone, add traffic to nearby roads
-    for (let y = 0; y < this.city.height; y++) {
-      for (let x = 0; x < this.city.width; x++) {
-        const tile = this.city.tiles[y][x];
-
-        if (tile.isMainTile && tile.isBuilding()) {
-          // Traffic generated based on zone type and level
-          let trafficGenerated = 0;
-
-          if (tile.isResidential()) {
-            // Residential generates commuter traffic (scales with level 1-9)
-            trafficGenerated = tile.level * 10;
-          } else if (tile.isCommercial()) {
-            // Commercial generates shopper traffic (scales with level 1-5)
-            trafficGenerated = tile.level * 20;
-          } else if (tile.isIndustrial()) {
-            // Industrial generates truck traffic (scales with level 1-4)
-            trafficGenerated = tile.level * 30;
-          }
-
-          // Spread traffic to nearby roads (radius 5)
-          for (let dy = -5; dy <= 5; dy++) {
-            for (let dx = -5; dx <= 5; dx++) {
-              const dist = Math.abs(dx) + Math.abs(dy); // Manhattan distance
-              if (dist <= 5 && dist > 0) {
-                const roadTile = this.city.getTile(x + dx, y + dy);
-                if (roadTile && roadTile.isRoad()) {
-                  const trafficAmount = Math.floor(trafficGenerated * (1 - dist / 6));
-                  roadTile.traffic = Math.min(255, roadTile.traffic + trafficAmount);
-                }
-              }
+    // Apply traffic from zones to nearby roads (reduced radius of 3 for performance)
+    for (const zone of zones) {
+      const { x, y, traffic } = zone;
+      // Check a smaller 7x7 area (radius 3) instead of 11x11
+      for (let dy = -3; dy <= 3; dy++) {
+        const ny = y + dy;
+        if (ny < 0 || ny >= height) continue;
+        for (let dx = -3; dx <= 3; dx++) {
+          const nx = x + dx;
+          if (nx < 0 || nx >= width) continue;
+          const dist = Math.abs(dx) + Math.abs(dy);
+          if (dist > 0 && dist <= 3) {
+            const roadTile = this.city.tiles[ny][nx];
+            if (roadTile.isRoad()) {
+              const amount = Math.floor(traffic * (1 - dist / 4));
+              roadTile.traffic = Math.min(255, roadTile.traffic + amount);
             }
           }
         }

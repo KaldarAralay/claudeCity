@@ -1,0 +1,13 @@
+Alerts
+From time to time, you’ll receive alerts that scroll across the screen just above the Options menu on line two of the HUD. This is the game’s way of letting you know things to progress your city. Below is a list of alerts and what to do to alleviate them. I believe the max character limit for Alerts is 24 based on the Debug Mode’s message.
+
+More (Residential/Commercial/Industrial) Zones Needed – Usually only occurs at the beginning of the game while planning your city, this alert shows up when you have a radical imbalance in your zones. Can also occur after rezoning for max population, when an imbalance is used on purpose.
+Build More Roads – This usually happens when you are first starting out and have yet to provide access to your zones. Unfortunately, if you are doing an all Rail layout, then you will continue to get this message throughout the game.
+Inadequate Transit System – This means you don’t have down enough tiles of Rail. Bulldoze areas with traffic and replace with Rail.
+Build a Power Plant – This happen when you have built more zones than your Plant(s) can handle. Simply build more stations to meet the demand. This alert can also trigger two other times:
+When your city reaches a certain size, usually after becoming a Metropolis, brownouts occur. There is no way to rectify this. No matter how many Power Plants you build it will still happen and this will trigger the alert.
+Sometimes after returning from the Budget screen at the end of the year, you will come back in January to have this message scroll across the screen. I never saw any outages, so this is most likely a bug and can be ignored.
+Citizens Demand a Fire Station – After you reach a population of 2000 and Dr. Wright announces you’re a Town, this alert will show up. Once you build a Fire Station, this message goes away. If you already have one built, then this message never appears.
+Citizens Demand a Stadium - After you reach a population of 10000 and Dr. Wright announces you’re a City, this alert will show up. Once you build a Stadium, this message goes away. If you already have one built, then this message never appears.
+I AM GODI WISH YOU HAPPY - This alert is shown when Debug Mode is toggled ON.
+I AM GOD DEBUGOFF - This alert is shown when Debug Mode is toggled OFF.

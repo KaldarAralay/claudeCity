@@ -13,6 +13,7 @@ class Game {
     this.toolbar = null;
     this.menuBar = null;
     this.statusBar = null;
+    this.alertSystem = null;
 
     // Game state
     this.currentTool = 'pointer';
@@ -56,6 +57,7 @@ class Game {
     this.toolbar = new Toolbar(this);
     this.menuBar = new MenuBar(this);
     this.statusBar = new StatusBar(this);
+    this.alertSystem = new AlertSystem(this);
 
     // Setup input handling
     this.setupInputHandlers();
@@ -305,6 +307,10 @@ class Game {
   // Called when simulation ticks
   onSimulationTick(data) {
     this.updateUI();
+    // Check for alert conditions every 6 months (not every tick for performance)
+    if (this.alertSystem && data.month % 6 === 0) {
+      this.alertSystem.checkAlerts();
+    }
   }
 
   // Update all UI elements
@@ -379,6 +385,10 @@ class Game {
     this.renderer.city = this.city;
     this.renderer.simulation = this.simulation;
     this.minimap.city = this.city;
+    // Reset alert system for new city
+    if (this.alertSystem) {
+      this.alertSystem.reset();
+    }
     this.simulation.start();
     this.updateUI();
     this.updateWindowTitle(null); // Reset title
@@ -653,6 +663,11 @@ class Game {
     this.renderer.simulation = this.simulation;
     this.minimap.city = this.city;
 
+    // Reset alert system for scenario
+    if (this.alertSystem) {
+      this.alertSystem.reset();
+    }
+
     // Start simulation
     this.simulation.start();
     this.updateUI();
@@ -835,7 +850,8 @@ class Game {
       timestamp: Date.now(),
       city: this.city.serialize(),
       budget: this.budget.serialize(),
-      simulation: this.simulation.serialize()
+      simulation: this.simulation.serialize(),
+      alertSystem: this.alertSystem?.serialize()
     };
 
     const jsonData = JSON.stringify(saveData, null, 2);
@@ -884,6 +900,10 @@ class Game {
       this.renderer.city = this.city;
       this.renderer.simulation = this.simulation;
       this.minimap.city = this.city;
+      // Restore alert system state
+      if (this.alertSystem && saveData.alertSystem) {
+        this.alertSystem.deserialize(saveData.alertSystem);
+      }
       this.simulation.start();
       this.updateUI();
       this.updateWindowTitle(filePath);
@@ -906,7 +926,8 @@ class Game {
       timestamp: Date.now(),
       city: this.city.serialize(),
       budget: this.budget.serialize(),
-      simulation: this.simulation.serialize()
+      simulation: this.simulation.serialize(),
+      alertSystem: this.alertSystem?.serialize()
     };
 
     const jsonData = JSON.stringify(saveData, null, 2);
