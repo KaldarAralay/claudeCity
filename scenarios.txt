@@ -1,0 +1,186 @@
+Scenarios
+This section will look at the scenarios available to you, their duration, goal, and a quick list of things to do to make your scenario a success. Keep in mind that with the exception of the Practice scenario, you are not given any Presents, so try to make due with the ones (if any) already placed in the scenarios. We’ll start with the Practice scenario, followed by the Challenge Scenarios.
+
+Practice (Scenarios)
+The practice scenario is a little challenging, but after playing it a handful of times, can be accomplished. 10 years would’ve been nice. Since Presents are given in the Practice scenario, try out some different strategies utilizing items like Free Land or the Police HQ. I've included a map after the Scenario description. Due to a bug in the game, Practice cannot be beat on the NES prototype. (Noted again in Bugs/Glitches)
+
+
+SimCity (1900)
+
+Duration
+
+5 years
+
+Goal
+
+Reach a population of 50000
+
+Methods
+
+You start the scenario with a small island and a goal of 50000.
+
+Cheap Moves
+
+Set the game speed to sleeping to get all of your Fire Departments into place before you set the game speed back in motion. That way, you are prepared for the impending disaster that is on its way.
+
+
+
+(Note: This image doesn't represent the full landform, just the islands)
+
+Challenge Scenarios
+There are eight scenarios total. You are first given six and upon completion of these you gain access to two bonus scenarios. The Las Vegas bonus scenario is the only challenge scenario to contain Presents (Casinos).
+
+
+San Francisco Earthquake (1906)
+
+Duration
+
+5 years
+
+Goal
+
+Recover from the big Earthquake of 1906, creating a bustling city.
+
+Methods
+
+The Earthquake will not occur immediately, so put up Fire Departments. After the earthquake hits, bulldoze debris and flammable buildings near the fires so they can not spread. Restore power and roads/rails. Once done, create a bustling city to draw back the people you lost because of the turmoil.
+
+Cheap Moves
+
+Set the game speed to sleeping to get all of your Fire Departments into place before you set the game speed back in motion.
+
+
+Bern Traffic (1965)
+
+Duration
+
+10 years
+
+Goal
+
+Relieve the heavily congested roads of Bern and get a Metropolis to become the National Transportation Planner for all of Switzerland.
+
+Methods
+
+You should work on creating a more effective rail system to take many cars off the road. Also, you should rid yourself of roads that are the heaviest in congestion on traffic. If you are a really good budgeter, you can replace ALL road with rail to create a completely non-congested road ratio!
+
+Cheap Moves
+
+Use the existing structure to limit costs. Most Rail is in place to touch all Zones with some help.
+
+
+Detroit Crime (1972)
+
+Duration
+
+10 years
+
+Goal
+
+Lower crime and revive the sagging Industrial economy.
+
+Methods
+
+Your first goal is to lower the ghastly crime rate by putting as many new Police Departments in the worst crime areas to expand your coverage. Next, once the crime has been lowered sufficiently, put Industry up where your population will not be polluted by it, but they will still have easy access to it. Once you have done that, work on lowering crime till it basically no longer exists, and expand your city to increase the population.
+
+Cheap Moves
+
+Destroy the excess Fire Stations to reduce yearly upkeep costs.
+
+
+Tokyo Monster Attack (1961)
+
+Duration
+
+5 years
+
+Goal
+
+Recover from the monster (Big Bad Bowser) attack, creating a bustling city.
+
+Methods
+
+You start the scenario before the monster (Bowser) takes his stroll, so set up a slightly better fire coverage ratio (you may want to increase police coverage as well due to high crime). After he comes, go to work on containing the damage, and then proceed to recover your losses before you move onto the expansion of Tokyo to finish the scenario with a larger amount of people than you started with!
+
+Cheap Moves
+
+Set the game speed to sleeping to get all of your Fire Departments into place before you set the game speed back in motion. That way, you are prepared for the impending disaster that is on its way.
+
+
+Boston Nuclear Meltdown (2010)
+
+Duration
+
+5 years
+
+Goal
+
+Isolate the contaminated areas of the city, and rebuild in new areas to bring in new population.
+
+Methods
+
+The disaster occurs right at the start, so bulldoze all of the areas affected by the Radioactive sections, isolate the fires, and then start to rebuild your city. Be sure to keep pollution and crime down as you work your way back up to a thriving city again, and bulldoze the extra Sea Ports as one is all you need.
+
+Cheap Moves
+
+You can hold the B Button as you enter the scenario, and then you go bulldoze the two Nuclear Power Plants before they explode. You will not have to deal with any radiation since there are NO Nuclear Power Plants left to meltdown in the first place. Patrick Jolicoeur shared that after the initial threat of meltdown it is perfectly safe to build new Nuclear Plants, as they will not meltdown. Needs to be confirmed it’s in the NES prototype.
+
+
+Rio de Janeiro Coastal Flooding (2047)
+
+Duration
+
+10 years
+
+Goal
+
+Build up the waterfront properties to prevent the rising sea level from flooding your city.
+
+Methods
+
+You have many years to work, so you have lots of time to get the problems under control. The first set of floods are particularly brutal, so try your best to contain any fires that spring up as a result. After you get the floods under control, start expanding your shoreline properties to help prevent flooding. Keep in mind this scenario will have floods happen multiple times. After a few years, floods will lessen, and you will have a quicker cleanup period.
+
+Cheap Moves
+
+You can pause the game and bulldoze all the shoreline. Dr Wright will still say a Flood is occurring, but with no coastline, nothing ever happens.
+
+Bonus Scenarios
+The following two scenarios are unlocked upon completion of the first six scenarios.
+
+
+Las Vegas U.F.O. Attacks (2096)
+
+Duration
+
+10 years
+
+Goal
+
+Rebuild the city after U.F.O. attacks.
+
+Methods
+
+The U.F.O. attacks do not occur immediately, so beef up fire coverage. You will face multiple invasions in ten years, but the first is easily the longest (ones following are about three attacks long each, as opposed to the near twenty of the first). Build around the outside of the map to lessen chances of subsequent attacks connecting with your buildings and be sure to fix the inadequate road system by supplementing it with a more Rail.
+
+Cheap Moves
+
+No real way to do so.
+
+
+Freeland (1999)
+
+Duration
+
+Infinite
+
+Goal
+
+Build this waterless Landform in the US Midwest to a Megalopolis with a population of 500,000.
+
+Methods
+
+You would think that having NO rivers, lakes, or oceans would be great, but you have no valuable waterfront property. On top of that, no Presents! You will have to make it on pure building skills, and land development alone! Try to build slowly so you do not over saturate the marketplace with property, If done in the manner listed above, you will reach a Megalopolis easily!
+
+Cheap Moves
+
+Use existing forest and Parks to raise the land value, attracting better buildings and more people

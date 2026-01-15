@@ -93,6 +93,325 @@ class City {
     }
   }
 
+  // Generate scenario-specific map
+  generateScenarioMap(mapType) {
+    this.initializeMap();
+
+    switch (mapType) {
+      case 'island':
+        this.generateIslandMap();
+        break;
+      case 'sanFrancisco':
+        this.generateSanFranciscoMap();
+        break;
+      case 'bern':
+        this.generateBernMap();
+        break;
+      case 'detroit':
+        this.generateDetroitMap();
+        break;
+      case 'tokyo':
+        this.generateTokyoMap();
+        break;
+      case 'boston':
+        this.generateBostonMap();
+        break;
+      case 'rio':
+        this.generateRioMap();
+        break;
+      case 'lasVegas':
+        this.generateLasVegasMap();
+        break;
+      case 'freeland':
+        this.generateFreelandMap();
+        break;
+      default:
+        this.generateTerrain();
+    }
+  }
+
+  // Island map for practice scenario
+  generateIslandMap() {
+    // Fill with water
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
+        this.tiles[y][x].type = TILE_TYPES.WATER;
+      }
+    }
+
+    // Create main island in center
+    const centerX = Math.floor(this.width / 2);
+    const centerY = Math.floor(this.height / 2);
+    const radiusX = 35;
+    const radiusY = 30;
+
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
+        const dx = (x - centerX) / radiusX;
+        const dy = (y - centerY) / radiusY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 1 + Math.sin(Math.atan2(dy, dx) * 5) * 0.15) {
+          this.tiles[y][x].type = TILE_TYPES.EMPTY;
+        }
+      }
+    }
+
+    // Add some forests
+    this.generateForests();
+
+    // Add a small starter city in center
+    this.placeStarterCity(centerX - 10, centerY - 10);
+  }
+
+  // San Francisco - coastal city with bay
+  generateSanFranciscoMap() {
+    // Ocean on west side, bay in center
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < 15; x++) {
+        this.tiles[y][x].type = TILE_TYPES.WATER;
+      }
+    }
+
+    // Bay area
+    const bayX = 50, bayY = 50, bayRadius = 20;
+    for (let dy = -bayRadius; dy <= bayRadius; dy++) {
+      for (let dx = -bayRadius; dx <= bayRadius; dx++) {
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < bayRadius) {
+          const x = bayX + dx, y = bayY + dy;
+          if (this.isInBounds(x, y)) {
+            this.tiles[y][x].type = TILE_TYPES.WATER;
+          }
+        }
+      }
+    }
+
+    this.generateForests();
+    this.placeMediumCity(30, 30);
+  }
+
+  // Bern - landlocked with rivers, heavy traffic city
+  generateBernMap() {
+    // River through city
+    for (let y = 0; y < this.height; y++) {
+      const riverX = 60 + Math.sin(y * 0.08) * 8;
+      for (let x = Math.floor(riverX); x < Math.floor(riverX) + 4; x++) {
+        if (this.isInBounds(x, y)) {
+          this.tiles[y][x].type = TILE_TYPES.WATER;
+        }
+      }
+    }
+
+    this.generateForests();
+    // Dense city with lots of roads (traffic problem)
+    this.placeDenseCity(30, 30);
+  }
+
+  // Detroit - industrial city with crime issues
+  generateDetroitMap() {
+    // River on edge
+    for (let y = 0; y < this.height; y++) {
+      for (let x = this.width - 8; x < this.width; x++) {
+        this.tiles[y][x].type = TILE_TYPES.WATER;
+      }
+    }
+
+    this.generateForests();
+    // Industrial heavy city
+    this.placeIndustrialCity(20, 30);
+  }
+
+  // Tokyo - coastal city
+  generateTokyoMap() {
+    // Bay on south and east
+    for (let y = this.height - 20; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
+        if (y > this.height - 15 || x > this.width - 30) {
+          this.tiles[y][x].type = TILE_TYPES.WATER;
+        }
+      }
+    }
+
+    for (let y = 0; y < this.height; y++) {
+      for (let x = this.width - 15; x < this.width; x++) {
+        this.tiles[y][x].type = TILE_TYPES.WATER;
+      }
+    }
+
+    this.generateForests();
+    this.placeLargeCity(30, 30);
+  }
+
+  // Boston - coastal city with nuclear plants
+  generateBostonMap() {
+    // Harbor
+    for (let y = 0; y < 25; y++) {
+      for (let x = 0; x < this.width; x++) {
+        if (y < 15 || (x > 40 && x < 80)) {
+          this.tiles[y][x].type = TILE_TYPES.WATER;
+        }
+      }
+    }
+
+    this.generateForests();
+    this.placeNuclearCity(30, 40);
+  }
+
+  // Rio - coastal city prone to flooding
+  generateRioMap() {
+    // Ocean on east
+    for (let y = 0; y < this.height; y++) {
+      for (let x = this.width - 20; x < this.width; x++) {
+        this.tiles[y][x].type = TILE_TYPES.WATER;
+      }
+    }
+
+    // Beach areas (low land)
+    for (let y = 0; y < this.height; y++) {
+      for (let x = this.width - 30; x < this.width - 20; x++) {
+        if (Math.random() < 0.3) {
+          this.tiles[y][x].type = TILE_TYPES.WATER;
+        }
+      }
+    }
+
+    this.generateForests();
+    this.placeCoastalCity(25, 30);
+  }
+
+  // Las Vegas - desert city
+  generateLasVegasMap() {
+    // No water - desert
+    this.generateForests(); // Sparse
+    this.placeLargeCity(40, 40);
+  }
+
+  // Freeland - completely flat, no water
+  generateFreelandMap() {
+    // Just forests scattered around
+    this.generateForests();
+    // No starter city - player builds from scratch
+  }
+
+  // Place a small starter city
+  placeStarterCity(startX, startY) {
+    // Power plant
+    this.placeBuilding(startX, startY, 'coal-power');
+
+    // Some roads
+    for (let i = 0; i < 15; i++) {
+      this.placeRoad(startX + 4 + i, startY + 2);
+      this.placeRoad(startX + 4 + i, startY + 8);
+    }
+    for (let i = 0; i < 7; i++) {
+      this.placeRoad(startX + 4, startY + 2 + i);
+      this.placeRoad(startX + 18, startY + 2 + i);
+    }
+
+    // Zones
+    this.placeZone(startX + 6, startY + 3, 'residential');
+    this.placeZone(startX + 10, startY + 3, 'residential');
+    this.placeZone(startX + 14, startY + 3, 'commercial');
+    this.placeZone(startX + 6, startY + 5, 'industrial');
+  }
+
+  // Place a medium-sized city
+  placeMediumCity(startX, startY) {
+    this.placeStarterCity(startX, startY);
+
+    // Add more zones
+    for (let i = 0; i < 3; i++) {
+      this.placeZone(startX + 6 + i * 4, startY + 12, 'residential');
+      this.placeZone(startX + 6 + i * 4, startY + 16, 'residential');
+    }
+
+    // More roads
+    for (let i = 0; i < 20; i++) {
+      this.placeRoad(startX + 4 + i, startY + 11);
+      this.placeRoad(startX + 4 + i, startY + 15);
+      this.placeRoad(startX + 4 + i, startY + 19);
+    }
+  }
+
+  // Place a dense city with traffic issues
+  placeDenseCity(startX, startY) {
+    this.placeMediumCity(startX, startY);
+
+    // Dense road network
+    for (let y = 0; y < 40; y += 4) {
+      for (let x = 0; x < 50; x++) {
+        if (this.isInBounds(startX + x, startY + y)) {
+          const tile = this.getTile(startX + x, startY + y);
+          if (tile && tile.isEmpty()) {
+            this.placeRoad(startX + x, startY + y);
+          }
+        }
+      }
+    }
+
+    // Rail system
+    for (let x = 0; x < 50; x += 8) {
+      for (let y = 0; y < 40; y++) {
+        if (this.isInBounds(startX + x, startY + y)) {
+          const tile = this.getTile(startX + x, startY + y);
+          if (tile && tile.isEmpty()) {
+            this.placeRail(startX + x, startY + y);
+          }
+        }
+      }
+    }
+  }
+
+  // Place industrial-heavy city
+  placeIndustrialCity(startX, startY) {
+    this.placeStarterCity(startX, startY);
+
+    // Lots of industrial zones
+    for (let i = 0; i < 4; i++) {
+      for (let j = 0; j < 3; j++) {
+        this.placeZone(startX + 25 + i * 4, startY + j * 4, 'industrial');
+      }
+    }
+
+    // Few police stations (high crime)
+    this.placeBuilding(startX + 20, startY + 15, 'police');
+  }
+
+  // Place large city
+  placeLargeCity(startX, startY) {
+    this.placeMediumCity(startX, startY);
+
+    // More residential
+    for (let i = 0; i < 5; i++) {
+      for (let j = 0; j < 4; j++) {
+        if (Math.random() > 0.3) {
+          this.placeZone(startX + i * 4, startY + 25 + j * 4, 'residential');
+        }
+      }
+    }
+
+    // Services
+    this.placeBuilding(startX + 25, startY + 5, 'police');
+    this.placeBuilding(startX + 25, startY + 10, 'fire');
+  }
+
+  // Place city with nuclear power
+  placeNuclearCity(startX, startY) {
+    this.placeLargeCity(startX, startY);
+
+    // Nuclear power plants
+    this.placeBuilding(startX + 40, startY + 10, 'nuclear-power');
+    this.placeBuilding(startX + 50, startY + 10, 'nuclear-power');
+  }
+
+  // Place coastal city
+  placeCoastalCity(startX, startY) {
+    this.placeMediumCity(startX, startY);
+
+    // Seaport
+    this.placeBuilding(startX + 30, startY + 5, 'seaport');
+  }
+
   // Check if coordinates are in bounds
   isInBounds(x, y) {
     return x >= 0 && x < this.width && y >= 0 && y < this.height;

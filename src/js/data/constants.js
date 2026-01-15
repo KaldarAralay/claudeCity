@@ -377,3 +377,164 @@ const DEMAND_FACTORS = {
   MAX_DEMAND: 2.0,
   MIN_DEMAND: -1.0
 };
+
+// Scenarios (NES SimCity based)
+const SCENARIOS = {
+  // Practice scenario
+  practice: {
+    id: 'practice',
+    name: 'SimCity',
+    year: 1900,
+    duration: 5,  // years
+    goalType: 'population',
+    goalValue: 50000,
+    description: 'Build a city of 50,000 on this small island.',
+    startingFunds: 20000,
+    difficulty: 'easy',
+    mapType: 'island',
+    scheduledDisasters: []
+  },
+
+  // Challenge scenarios
+  sanFrancisco: {
+    id: 'sanFrancisco',
+    name: 'San Francisco Earthquake',
+    year: 1906,
+    duration: 5,
+    goalType: 'population',
+    goalValue: 100000,
+    description: 'Recover from the great earthquake of 1906 and rebuild the city.',
+    startingFunds: 20000,
+    difficulty: 'easy',
+    mapType: 'sanFrancisco',
+    scheduledDisasters: [
+      { type: 'earthquake', month: 3 }  // Happens early
+    ]
+  },
+
+  bern: {
+    id: 'bern',
+    name: 'Bern Traffic',
+    year: 1965,
+    duration: 10,
+    goalType: 'metropolis',  // Reach metropolis status (population threshold)
+    goalValue: 100000,
+    description: 'Relieve the congested roads and become the National Transportation Planner.',
+    startingFunds: 20000,
+    difficulty: 'easy',
+    mapType: 'bern',
+    scheduledDisasters: []
+  },
+
+  detroit: {
+    id: 'detroit',
+    name: 'Detroit Crime',
+    year: 1972,
+    duration: 10,
+    goalType: 'crime',  // Lower crime rate
+    goalValue: 20,  // Crime below 20%
+    description: 'Lower crime and revive the sagging industrial economy.',
+    startingFunds: 20000,
+    difficulty: 'easy',
+    mapType: 'detroit',
+    scheduledDisasters: []
+  },
+
+  tokyo: {
+    id: 'tokyo',
+    name: 'Tokyo Monster Attack',
+    year: 1961,
+    duration: 5,
+    goalType: 'population',
+    goalValue: 100000,
+    description: 'Recover from the monster attack and rebuild Tokyo.',
+    startingFunds: 20000,
+    difficulty: 'easy',
+    mapType: 'tokyo',
+    scheduledDisasters: [
+      { type: 'monster', month: 6 }
+    ]
+  },
+
+  boston: {
+    id: 'boston',
+    name: 'Boston Nuclear Meltdown',
+    year: 2010,
+    duration: 5,
+    goalType: 'population',
+    goalValue: 100000,
+    description: 'Isolate contaminated areas and rebuild the city.',
+    startingFunds: 20000,
+    difficulty: 'easy',
+    mapType: 'boston',
+    scheduledDisasters: [
+      { type: 'meltdown', month: 1 }  // Happens immediately
+    ]
+  },
+
+  rio: {
+    id: 'rio',
+    name: 'Rio de Janeiro Flooding',
+    year: 2047,
+    duration: 10,
+    goalType: 'population',
+    goalValue: 100000,
+    description: 'Protect the city from rising sea levels and flooding.',
+    startingFunds: 20000,
+    difficulty: 'easy',
+    mapType: 'rio',
+    scheduledDisasters: [
+      { type: 'flood', month: 2 },
+      { type: 'flood', month: 24 },
+      { type: 'flood', month: 48 },
+      { type: 'flood', month: 72 },
+      { type: 'flood', month: 96 }
+    ]
+  },
+
+  // Bonus scenarios
+  lasVegas: {
+    id: 'lasVegas',
+    name: 'Las Vegas U.F.O. Attacks',
+    year: 2096,
+    duration: 10,
+    goalType: 'population',
+    goalValue: 100000,
+    description: 'Rebuild after the U.F.O. attacks devastate the city.',
+    startingFunds: 20000,
+    difficulty: 'easy',
+    mapType: 'lasVegas',
+    isBonus: true,
+    scheduledDisasters: [
+      { type: 'tornado', month: 6 },  // UFO attacks as tornado-like
+      { type: 'tornado', month: 24 },
+      { type: 'tornado', month: 48 },
+      { type: 'tornado', month: 72 }
+    ]
+  },
+
+  freeland: {
+    id: 'freeland',
+    name: 'Freeland',
+    year: 1999,
+    duration: -1,  // Infinite
+    goalType: 'megalopolis',
+    goalValue: 500000,
+    description: 'Build a Megalopolis on this waterless land in the Midwest.',
+    startingFunds: 20000,
+    difficulty: 'easy',
+    mapType: 'freeland',
+    isBonus: true,
+    scheduledDisasters: []
+  }
+};
+
+// City classification by population
+const CITY_CLASSES = {
+  VILLAGE: { name: 'Village', minPop: 0 },
+  TOWN: { name: 'Town', minPop: 2000 },
+  CITY: { name: 'City', minPop: 10000 },
+  CAPITAL: { name: 'Capital', minPop: 50000 },
+  METROPOLIS: { name: 'Metropolis', minPop: 100000 },
+  MEGALOPOLIS: { name: 'Megalopolis', minPop: 500000 }
+};

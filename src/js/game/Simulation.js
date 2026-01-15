@@ -20,6 +20,15 @@ class Simulation {
     this.speed = GAME_CONSTANTS.SPEED_NORMAL;
     this.tickTimer = null;
 
+    // Scenario mode
+    this.scenario = null;
+    this.scenarioStartYear = 0;
+    this.scenarioStartMonth = 0;
+    this.scenarioMonthsElapsed = 0;
+    this.scenarioComplete = false;
+    this.scenarioFailed = false;
+    this.triggeredDisasters = new Set();  // Track which scheduled disasters have fired
+
     // Statistics
     this.stats = {
       totalPowerProduced: 0,
@@ -41,6 +50,162 @@ class Simulation {
       traffic: 0,
       unemployment: 0
     };
+  }
+
+  // Set up scenario mode
+  setScenario(scenario) {
+    this.scenario = scenario;
+    this.year = scenario.year;
+    this.month = 0;
+    this.scenarioStartYear = scenario.year;
+    this.scenarioStartMonth = 0;
+    this.scenarioMonthsElapsed = 0;
+    this.scenarioComplete = false;
+    this.scenarioFailed = false;
+    this.triggeredDisasters = new Set();
+  }
+
+  // Check scenario goals and time limit
+  checkScenarioStatus() {
+    if (!this.scenario || this.scenarioComplete || this.scenarioFailed) return;
+
+    // Update elapsed time
+    this.scenarioMonthsElapsed = (this.year - this.scenarioStartYear) * 12 + this.month;
+
+    // Check time limit (if not infinite)
+    if (this.scenario.duration > 0) {
+      const maxMonths = this.scenario.duration * 12;
+      if (this.scenarioMonthsElapsed >= maxMonths) {
+        // Time's up - check if goal was met
+        if (this.checkScenarioGoal()) {
+          this.scenarioComplete = true;
+          if (this.onScenarioWin) this.onScenarioWin(this.scenario);
+        } else {
+          this.scenarioFailed = true;
+          if (this.onScenarioLose) this.onScenarioLose(this.scenario);
+        }
+        return;
+      }
+    }
+
+    // Check if goal is met early
+    if (this.checkScenarioGoal()) {
+      this.scenarioComplete = true;
+      if (this.onScenarioWin) this.onScenarioWin(this.scenario);
+    }
+  }
+
+  // Check if scenario goal is met
+  checkScenarioGoal() {
+    if (!this.scenario) return false;
+
+    switch (this.scenario.goalType) {
+      case 'population':
+        return this.population >= this.scenario.goalValue;
+
+      case 'metropolis':
+        return this.population >= CITY_CLASSES.METROPOLIS.minPop;
+
+      case 'megalopolis':
+        return this.population >= CITY_CLASSES.MEGALOPOLIS.minPop;
+
+      case 'crime':
+        // Crime must be BELOW the goal value
+        return this.stats.crimeRate < this.scenario.goalValue;
+
+      default:
+        return false;
+    }
+  }
+
+  // Get scenario progress info
+  getScenarioProgress() {
+    if (!this.scenario) return null;
+
+    const maxMonths = this.scenario.duration > 0 ? this.scenario.duration * 12 : -1;
+    const remainingMonths = maxMonths > 0 ? maxMonths - this.scenarioMonthsElapsed : -1;
+
+    let progress = 0;
+    let goalText = '';
+    let currentValue = 0;
+    let targetValue = this.scenario.goalValue;
+
+    switch (this.scenario.goalType) {
+      case 'population':
+      case 'metropolis':
+      case 'megalopolis':
+        currentValue = this.population;
+        progress = Math.min(100, (this.population / this.scenario.goalValue) * 100);
+        goalText = `Population: ${this.population.toLocaleString()} / ${this.scenario.goalValue.toLocaleString()}`;
+        break;
+      case 'crime':
+        currentValue = Math.round(this.stats.crimeRate);
+        progress = Math.max(0, 100 - this.stats.crimeRate);
+        goalText = `Crime Rate: ${Math.round(this.stats.crimeRate)}% (Goal: below ${this.scenario.goalValue}%)`;
+        break;
+    }
+
+    return {
+      name: this.scenario.name,
+      description: this.scenario.description,
+      progress: Math.round(progress),
+      percentage: Math.round(progress),
+      currentValue,
+      targetValue,
+      goalText,
+      monthsElapsed: this.scenarioMonthsElapsed,
+      monthsRemaining: remainingMonths,
+      yearsRemaining: remainingMonths > 0 ? Math.ceil(remainingMonths / 12) : -1,
+      complete: this.scenarioComplete,
+      failed: this.scenarioFailed
+    };
+  }
+
+  // Check and trigger scheduled disasters
+  checkScheduledDisasters() {
+    if (!this.scenario || !this.scenario.scheduledDisasters) return;
+
+    for (const disaster of this.scenario.scheduledDisasters) {
+      const key = `${disaster.type}-${disaster.month}`;
+      if (this.scenarioMonthsElapsed >= disaster.month && !this.triggeredDisasters.has(key)) {
+        this.triggeredDisasters.add(key);
+        this.triggerScheduledDisaster(disaster.type);
+      }
+    }
+  }
+
+  // Trigger a scheduled disaster
+  triggerScheduledDisaster(type) {
+    switch (type) {
+      case 'earthquake':
+        this.triggerEarthquakeDisaster();
+        break;
+      case 'fire':
+        this.triggerFireDisaster();
+        break;
+      case 'flood':
+        this.triggerFloodDisaster();
+        break;
+      case 'tornado':
+        this.triggerTornadoDisaster();
+        break;
+      case 'monster':
+        this.triggerMonsterDisaster();
+        break;
+      case 'meltdown':
+        this.triggerNuclearMeltdown();
+        break;
+    }
+  }
+
+  // Get city classification based on population
+  getCityClass() {
+    if (this.population >= CITY_CLASSES.MEGALOPOLIS.minPop) return CITY_CLASSES.MEGALOPOLIS;
+    if (this.population >= CITY_CLASSES.METROPOLIS.minPop) return CITY_CLASSES.METROPOLIS;
+    if (this.population >= CITY_CLASSES.CAPITAL.minPop) return CITY_CLASSES.CAPITAL;
+    if (this.population >= CITY_CLASSES.CITY.minPop) return CITY_CLASSES.CITY;
+    if (this.population >= CITY_CLASSES.TOWN.minPop) return CITY_CLASSES.TOWN;
+    return CITY_CLASSES.VILLAGE;
   }
 
   // Start simulation
@@ -105,6 +270,12 @@ class Simulation {
 
     // Update population
     this.population = this.city.getTotalPopulation();
+
+    // Check scenario-related events
+    if (this.scenario) {
+      this.checkScheduledDisasters();
+      this.checkScenarioStatus();
+    }
 
     // Schedule next tick
     this.scheduleNextTick();

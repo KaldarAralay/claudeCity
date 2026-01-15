@@ -143,6 +143,12 @@
       <div class="status-section status-tool">
         <span class="status-value" id="status-tool">Select</span>
       </div>
+      <div class="status-section status-scenario" id="status-scenario" style="display: none;">
+        <span class="status-label">Goal:</span>
+        <span class="status-value" id="scenario-progress">0%</span>
+        <span class="status-label" style="margin-left: 8px;">Time:</span>
+        <span class="status-value" id="scenario-time">5 yrs</span>
+      </div>
       <div class="status-section status-speed">
         <button class="speed-btn" data-speed="pause" title="Pause">||</button>
         <button class="speed-btn selected" data-speed="normal" title="Normal">></button>
@@ -155,6 +161,8 @@
   <!-- Menu Dropdowns (hidden by default) -->
   <div class="win95-dropdown" id="dropdown-system" style="display: none;">
     <div class="win95-dropdown-item" data-action="new-city">New City</div>
+    <div class="win95-dropdown-item" data-action="scenarios">Scenarios...</div>
+    <div class="win95-dropdown-separator"></div>
     <div class="win95-dropdown-item" data-action="load-city">Load City...</div>
     <div class="win95-dropdown-item" data-action="save-city">Save City</div>
     <div class="win95-dropdown-item" data-action="save-city-as">Save City As...</div>

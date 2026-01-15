@@ -89,6 +89,9 @@ class MenuBar {
           this.game.newCity();
         }
         break;
+      case 'scenarios':
+        this.game.showScenarioDialog();
+        break;
       case 'load-city':
         this.game.loadCity();
         break;

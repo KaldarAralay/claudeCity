@@ -312,7 +312,8 @@ class Game {
       funds: this.budget.funds,
       date: this.simulation.getDateString(),
       population: this.simulation.population,
-      demand: this.simulation.getDemandIndicators()
+      demand: this.simulation.getDemandIndicators(),
+      scenario: this.simulation.getScenarioProgress()
     });
   }
 
@@ -486,6 +487,341 @@ class Game {
     // Cancel button
     dialog.querySelector('#difficulty-cancel-btn').addEventListener('click', () => {
       dialog.remove();
+    });
+  }
+
+  // Show scenario selection dialog
+  showScenarioDialog() {
+    // Remove existing dialog if any
+    const existing = document.getElementById('scenario-dialog');
+    if (existing) existing.remove();
+
+    const scenarios = SCENARIOS;
+    const scenarioList = Object.values(scenarios);
+
+    // Separate main scenarios from bonus
+    const mainScenarios = scenarioList.filter(s => !s.isBonus);
+    const bonusScenarios = scenarioList.filter(s => s.isBonus);
+
+    const dialog = document.createElement('div');
+    dialog.id = 'scenario-dialog';
+    dialog.className = 'win95-dialog';
+    dialog.style.maxHeight = '80vh';
+    dialog.style.overflow = 'hidden';
+    dialog.innerHTML = `
+      <div class="win95-title-bar" style="-webkit-app-region: no-drag;">
+        <div class="win95-title-bar-text">Select Scenario</div>
+        <div class="win95-title-bar-controls">
+          <button class="win95-title-btn win95-title-btn-close" id="scenario-close-btn">X</button>
+        </div>
+      </div>
+      <div class="win95-dialog-content" style="padding: 15px; min-width: 450px; max-height: 60vh; overflow-y: auto;">
+        <div style="text-align: center; margin-bottom: 15px; font-weight: bold;">
+          Choose a Scenario Challenge:
+        </div>
+
+        <div style="font-weight: bold; margin-bottom: 8px; color: #000080;">Main Scenarios</div>
+        <div id="main-scenarios"></div>
+
+        <div style="font-weight: bold; margin: 15px 0 8px 0; color: #800080;">Bonus Scenarios</div>
+        <div id="bonus-scenarios"></div>
+
+        <div style="margin-top: 15px; text-align: center;">
+          <button class="win95-button" id="scenario-cancel-btn" style="padding: 4px 20px;">Cancel</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(dialog);
+
+    // Helper to create scenario option HTML
+    const createScenarioOption = (scenario) => {
+      const durationText = scenario.duration === -1 ? 'Unlimited' : `${scenario.duration} years`;
+      let goalText = '';
+      switch (scenario.goalType) {
+        case 'population':
+          goalText = `Population: ${scenario.goalValue.toLocaleString()}`;
+          break;
+        case 'crime':
+          goalText = `Crime below ${scenario.goalValue}%`;
+          break;
+        case 'metropolis':
+          goalText = 'Reach Metropolis status';
+          break;
+        case 'megalopolis':
+          goalText = 'Reach Megalopolis status';
+          break;
+      }
+
+      const option = document.createElement('div');
+      option.className = 'scenario-option';
+      option.dataset.scenario = scenario.id;
+      option.style.cssText = `
+        padding: 10px;
+        margin: 6px 0;
+        background: #C0C0C0;
+        border: 2px solid;
+        border-color: #FFFFFF #808080 #808080 #FFFFFF;
+        cursor: pointer;
+      `;
+      option.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="font-weight: bold;">${scenario.name}</div>
+          <div style="font-size: 10px; color: #666;">${scenario.year}</div>
+        </div>
+        <div style="font-size: 11px; margin-top: 4px; color: #333;">
+          ${scenario.description}
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 6px; font-size: 10px; color: #444;">
+          <span>Duration: ${durationText}</span>
+          <span>Goal: ${goalText}</span>
+        </div>
+      `;
+      return option;
+    };
+
+    // Add main scenarios
+    const mainContainer = dialog.querySelector('#main-scenarios');
+    mainScenarios.forEach(scenario => {
+      const option = createScenarioOption(scenario);
+      mainContainer.appendChild(option);
+    });
+
+    // Add bonus scenarios
+    const bonusContainer = dialog.querySelector('#bonus-scenarios');
+    bonusScenarios.forEach(scenario => {
+      const option = createScenarioOption(scenario);
+      bonusContainer.appendChild(option);
+    });
+
+    // Add hover and click events
+    dialog.querySelectorAll('.scenario-option').forEach(option => {
+      option.addEventListener('mouseenter', () => {
+        option.style.borderColor = '#808080 #FFFFFF #FFFFFF #808080';
+        option.style.background = '#D0D0D0';
+      });
+      option.addEventListener('mouseleave', () => {
+        option.style.borderColor = '#FFFFFF #808080 #808080 #FFFFFF';
+        option.style.background = '#C0C0C0';
+      });
+      option.addEventListener('click', () => {
+        const scenarioId = option.dataset.scenario;
+        dialog.remove();
+        this.startScenario(scenarioId);
+      });
+    });
+
+    // Close button
+    dialog.querySelector('#scenario-close-btn').addEventListener('click', () => {
+      dialog.remove();
+    });
+
+    // Cancel button
+    dialog.querySelector('#scenario-cancel-btn').addEventListener('click', () => {
+      dialog.remove();
+    });
+  }
+
+  // Start a scenario
+  startScenario(scenarioId) {
+    const scenario = SCENARIOS[scenarioId];
+    if (!scenario) {
+      alert('Unknown scenario: ' + scenarioId);
+      return;
+    }
+
+    this.simulation.pause();
+
+    // Create new city with scenario map
+    this.city = new City();
+    this.city.generateScenarioMap(scenario.mapType);
+
+    // Create budget with scenario settings
+    this.budget = new Budget(scenario.difficulty);
+    this.budget.funds = scenario.startingFunds;
+
+    // Create simulation with scenario
+    this.simulation = new Simulation(this.city, this.budget);
+    this.simulation.setScenario(scenario);
+    this.simulation.onTick = (data) => this.onSimulationTick(data);
+    this.simulation.onScenarioWin = () => this.onScenarioWin();
+    this.simulation.onScenarioLose = () => this.onScenarioLose();
+
+    // Update references
+    this.renderer.city = this.city;
+    this.minimap.city = this.city;
+
+    // Start simulation
+    this.simulation.start();
+    this.updateUI();
+    this.updateWindowTitle(null);
+
+    // Center camera
+    this.renderer.centerOn(
+      Math.floor(this.city.width / 2),
+      Math.floor(this.city.height / 2)
+    );
+
+    // Show scenario start notification
+    this.showScenarioStartDialog(scenario);
+  }
+
+  // Show scenario start dialog
+  showScenarioStartDialog(scenario) {
+    const existing = document.getElementById('scenario-start-dialog');
+    if (existing) existing.remove();
+
+    const durationText = scenario.duration === -1 ? 'Unlimited time' : `${scenario.duration} years`;
+    let goalText = '';
+    switch (scenario.goalType) {
+      case 'population':
+        goalText = `Reach a population of ${scenario.goalValue.toLocaleString()}`;
+        break;
+      case 'crime':
+        goalText = `Lower crime rate below ${scenario.goalValue}%`;
+        break;
+      case 'metropolis':
+        goalText = 'Grow your city to Metropolis status';
+        break;
+      case 'megalopolis':
+        goalText = 'Build a Megalopolis with 500,000+ population';
+        break;
+    }
+
+    const dialog = document.createElement('div');
+    dialog.id = 'scenario-start-dialog';
+    dialog.className = 'win95-dialog';
+    dialog.innerHTML = `
+      <div class="win95-title-bar" style="-webkit-app-region: no-drag;">
+        <div class="win95-title-bar-text">${scenario.name}</div>
+        <div class="win95-title-bar-controls">
+          <button class="win95-title-btn win95-title-btn-close" id="scenario-start-close">X</button>
+        </div>
+      </div>
+      <div class="win95-dialog-content" style="padding: 20px; min-width: 350px; text-align: center;">
+        <div style="font-size: 16px; font-weight: bold; margin-bottom: 15px;">
+          ${scenario.name}
+        </div>
+        <div style="font-size: 12px; margin-bottom: 10px; color: #333;">
+          ${scenario.description}
+        </div>
+        <div style="background: #FFF; border: 2px inset #808080; padding: 10px; margin: 15px 0;">
+          <div style="font-weight: bold; margin-bottom: 5px;">Objective</div>
+          <div style="font-size: 12px;">${goalText}</div>
+          <div style="font-size: 11px; color: #666; margin-top: 5px;">Time Limit: ${durationText}</div>
+        </div>
+        <div style="margin-top: 15px;">
+          <button class="win95-button" id="scenario-start-btn" style="padding: 6px 30px;">
+            Start Scenario
+          </button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(dialog);
+
+    // Pause the simulation until user starts
+    this.simulation.pause();
+
+    dialog.querySelector('#scenario-start-close').addEventListener('click', () => {
+      dialog.remove();
+      this.simulation.start();
+    });
+
+    dialog.querySelector('#scenario-start-btn').addEventListener('click', () => {
+      dialog.remove();
+      this.simulation.start();
+    });
+  }
+
+  // Called when scenario is won
+  onScenarioWin() {
+    this.simulation.pause();
+    const scenario = this.simulation.scenario;
+
+    const dialog = document.createElement('div');
+    dialog.id = 'scenario-win-dialog';
+    dialog.className = 'win95-dialog';
+    dialog.innerHTML = `
+      <div class="win95-title-bar" style="-webkit-app-region: no-drag; background: linear-gradient(90deg, #008000, #00AA00);">
+        <div class="win95-title-bar-text" style="color: white;">Victory!</div>
+      </div>
+      <div class="win95-dialog-content" style="padding: 25px; min-width: 350px; text-align: center;">
+        <div style="font-size: 24px; color: #008000; margin-bottom: 15px;">
+          Congratulations!
+        </div>
+        <div style="font-size: 14px; margin-bottom: 10px;">
+          You have completed the <strong>${scenario.name}</strong> scenario!
+        </div>
+        <div style="background: #C0FFC0; border: 2px inset #808080; padding: 15px; margin: 15px 0;">
+          <div>Final Population: ${this.simulation.population.toLocaleString()}</div>
+          <div>Time: ${this.simulation.year} (${this.simulation.getDateString()})</div>
+        </div>
+        <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
+          <button class="win95-button" id="win-continue-btn" style="padding: 6px 20px;">Continue Playing</button>
+          <button class="win95-button" id="win-newgame-btn" style="padding: 6px 20px;">New Game</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(dialog);
+
+    dialog.querySelector('#win-continue-btn').addEventListener('click', () => {
+      dialog.remove();
+      this.simulation.scenario = null; // Clear scenario to continue in sandbox mode
+      this.simulation.start();
+    });
+
+    dialog.querySelector('#win-newgame-btn').addEventListener('click', () => {
+      dialog.remove();
+      this.newCity();
+    });
+  }
+
+  // Called when scenario is lost (time ran out)
+  onScenarioLose() {
+    this.simulation.pause();
+    const scenario = this.simulation.scenario;
+    const progress = this.simulation.getScenarioProgress();
+
+    const dialog = document.createElement('div');
+    dialog.id = 'scenario-lose-dialog';
+    dialog.className = 'win95-dialog';
+    dialog.innerHTML = `
+      <div class="win95-title-bar" style="-webkit-app-region: no-drag; background: linear-gradient(90deg, #800000, #AA0000);">
+        <div class="win95-title-bar-text" style="color: white;">Time's Up!</div>
+      </div>
+      <div class="win95-dialog-content" style="padding: 25px; min-width: 350px; text-align: center;">
+        <div style="font-size: 24px; color: #800000; margin-bottom: 15px;">
+          Scenario Failed
+        </div>
+        <div style="font-size: 14px; margin-bottom: 10px;">
+          Time has run out for the <strong>${scenario.name}</strong> scenario.
+        </div>
+        <div style="background: #FFC0C0; border: 2px inset #808080; padding: 15px; margin: 15px 0;">
+          <div>Your Progress: ${progress.currentValue.toLocaleString()} / ${progress.targetValue.toLocaleString()}</div>
+          <div style="margin-top: 5px;">
+            <div style="background: #800000; height: 20px; position: relative;">
+              <div style="background: #00AA00; height: 100%; width: ${Math.min(100, progress.percentage)}%;"></div>
+              <div style="position: absolute; top: 2px; left: 50%; transform: translateX(-50%); color: white; font-size: 11px;">
+                ${progress.percentage}%
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
+          <button class="win95-button" id="lose-retry-btn" style="padding: 6px 20px;">Retry Scenario</button>
+          <button class="win95-button" id="lose-newgame-btn" style="padding: 6px 20px;">New Game</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(dialog);
+
+    dialog.querySelector('#lose-retry-btn').addEventListener('click', () => {
+      dialog.remove();
+      this.startScenario(scenario.id);
+    });
+
+    dialog.querySelector('#lose-newgame-btn').addEventListener('click', () => {
+      dialog.remove();
+      this.newCity();
     });
   }
 

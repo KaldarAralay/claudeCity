@@ -14,6 +14,11 @@ class StatusBar {
     this.demandC = document.getElementById('demand-c');
     this.demandI = document.getElementById('demand-i');
 
+    // Scenario elements
+    this.scenarioSection = document.getElementById('status-scenario');
+    this.scenarioProgress = document.getElementById('scenario-progress');
+    this.scenarioTime = document.getElementById('scenario-time');
+
     // Speed controls
     this.currentSpeed = 'normal';
     this.setupSpeedControls();
@@ -134,6 +139,50 @@ class StatusBar {
     return this.currentSpeed;
   }
 
+  // Update scenario progress display
+  updateScenarioProgress(scenarioData) {
+    if (!scenarioData) {
+      // No scenario - hide the section
+      if (this.scenarioSection) {
+        this.scenarioSection.style.display = 'none';
+      }
+      return;
+    }
+
+    // Show scenario section
+    if (this.scenarioSection) {
+      this.scenarioSection.style.display = '';
+    }
+
+    // Update progress
+    if (this.scenarioProgress) {
+      this.scenarioProgress.textContent = `${scenarioData.percentage}%`;
+      // Color based on progress
+      if (scenarioData.percentage >= 100) {
+        this.scenarioProgress.style.color = '#00AA00';
+      } else if (scenarioData.percentage >= 50) {
+        this.scenarioProgress.style.color = '#AAAA00';
+      } else {
+        this.scenarioProgress.style.color = '#AA0000';
+      }
+    }
+
+    // Update time remaining
+    if (this.scenarioTime) {
+      if (scenarioData.yearsRemaining < 0) {
+        this.scenarioTime.textContent = 'Unlimited';
+        this.scenarioTime.style.color = '';
+      } else if (scenarioData.yearsRemaining <= 1) {
+        const monthsLeft = scenarioData.monthsRemaining;
+        this.scenarioTime.textContent = `${monthsLeft} mo`;
+        this.scenarioTime.style.color = '#AA0000';
+      } else {
+        this.scenarioTime.textContent = `${scenarioData.yearsRemaining} yrs`;
+        this.scenarioTime.style.color = scenarioData.yearsRemaining <= 2 ? '#AAAA00' : '';
+      }
+    }
+  }
+
   // Update all status at once
   update(data) {
     if (data.funds !== undefined) this.updateFunds(data.funds);
@@ -145,6 +194,9 @@ class StatusBar {
         data.demand.commercial,
         data.demand.industrial
       );
+    }
+    if (data.scenario !== undefined) {
+      this.updateScenarioProgress(data.scenario);
     }
   }
 }
