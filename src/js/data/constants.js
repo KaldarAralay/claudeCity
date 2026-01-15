@@ -385,7 +385,7 @@ const SCENARIOS = {
     id: 'practice',
     name: 'SimCity',
     year: 1900,
-    duration: 5,  // years
+    duration: 50,  // years
     goalType: 'population',
     goalValue: 50000,
     description: 'Build a city of 50,000 on this small island.',
@@ -400,7 +400,7 @@ const SCENARIOS = {
     id: 'sanFrancisco',
     name: 'San Francisco Earthquake',
     year: 1906,
-    duration: 5,
+    duration: 50,
     goalType: 'population',
     goalValue: 100000,
     description: 'Recover from the great earthquake of 1906 and rebuild the city.',
@@ -416,7 +416,7 @@ const SCENARIOS = {
     id: 'bern',
     name: 'Bern Traffic',
     year: 1965,
-    duration: 10,
+    duration: 100,
     goalType: 'metropolis',  // Reach metropolis status (population threshold)
     goalValue: 100000,
     description: 'Relieve the congested roads and become the National Transportation Planner.',
@@ -430,7 +430,7 @@ const SCENARIOS = {
     id: 'detroit',
     name: 'Detroit Crime',
     year: 1972,
-    duration: 10,
+    duration: 100,
     goalType: 'crime',  // Lower crime rate
     goalValue: 20,  // Crime below 20%
     description: 'Lower crime and revive the sagging industrial economy.',
@@ -444,7 +444,7 @@ const SCENARIOS = {
     id: 'tokyo',
     name: 'Tokyo Monster Attack',
     year: 1961,
-    duration: 5,
+    duration: 50,
     goalType: 'population',
     goalValue: 100000,
     description: 'Recover from the monster attack and rebuild Tokyo.',
@@ -460,7 +460,7 @@ const SCENARIOS = {
     id: 'boston',
     name: 'Boston Nuclear Meltdown',
     year: 2010,
-    duration: 5,
+    duration: 50,
     goalType: 'population',
     goalValue: 100000,
     description: 'Isolate contaminated areas and rebuild the city.',
@@ -476,7 +476,7 @@ const SCENARIOS = {
     id: 'rio',
     name: 'Rio de Janeiro Flooding',
     year: 2047,
-    duration: 10,
+    duration: 100,
     goalType: 'population',
     goalValue: 100000,
     description: 'Protect the city from rising sea levels and flooding.',
@@ -484,11 +484,11 @@ const SCENARIOS = {
     difficulty: 'easy',
     mapType: 'rio',
     scheduledDisasters: [
-      { type: 'flood', month: 2 },
-      { type: 'flood', month: 24 },
-      { type: 'flood', month: 48 },
-      { type: 'flood', month: 72 },
-      { type: 'flood', month: 96 }
+      { type: 'flood', month: 20 },
+      { type: 'flood', month: 240 },
+      { type: 'flood', month: 480 },
+      { type: 'flood', month: 720 },
+      { type: 'flood', month: 960 }
     ]
   },
 
@@ -497,7 +497,7 @@ const SCENARIOS = {
     id: 'lasVegas',
     name: 'Las Vegas U.F.O. Attacks',
     year: 2096,
-    duration: 10,
+    duration: 100,
     goalType: 'population',
     goalValue: 100000,
     description: 'Rebuild after the U.F.O. attacks devastate the city.',
@@ -506,10 +506,10 @@ const SCENARIOS = {
     mapType: 'lasVegas',
     isBonus: true,
     scheduledDisasters: [
-      { type: 'tornado', month: 6 },  // UFO attacks as tornado-like
-      { type: 'tornado', month: 24 },
-      { type: 'tornado', month: 48 },
-      { type: 'tornado', month: 72 }
+      { type: 'tornado', month: 60 },  // UFO attacks as tornado-like
+      { type: 'tornado', month: 240 },
+      { type: 'tornado', month: 480 },
+      { type: 'tornado', month: 720 }
     ]
   },
 
