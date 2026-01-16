@@ -14,6 +14,7 @@ class Game {
     this.menuBar = null;
     this.statusBar = null;
     this.alertSystem = null;
+    this.tileInfo = null;
 
     // Game state
     this.currentTool = 'pointer';
@@ -58,6 +59,7 @@ class Game {
     this.menuBar = new MenuBar(this);
     this.statusBar = new StatusBar(this);
     this.alertSystem = new AlertSystem(this);
+    this.tileInfo = new TileInfo(this);
 
     // Setup input handling
     this.setupInputHandlers();
@@ -119,16 +121,25 @@ class Game {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    const tile = this.renderer.getTileAt(x, y);
+    const tilePos = this.renderer.getTileAt(x, y);
+    const tile = this.city.getTile(tilePos.x, tilePos.y);
 
     this.isDragging = true;
-    this.dragStartX = tile.x;
-    this.dragStartY = tile.y;
+    this.dragStartX = tilePos.x;
+    this.dragStartY = tilePos.y;
     this.lastPlacedX = -1;
     this.lastPlacedY = -1;
 
+    // Show tile info popup when using pointer tool
+    if (this.toolbar.getCurrentTool() === 'pointer' && tile) {
+      this.tileInfo.show(tile, e.clientX, e.clientY);
+      return;
+    } else {
+      this.tileInfo.hide();
+    }
+
     // Perform tool action
-    this.useTool(tile.x, tile.y);
+    this.useTool(tilePos.x, tilePos.y);
   }
 
   // Handle mouse move
@@ -137,15 +148,15 @@ class Game {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    const tile = this.renderer.getTileAt(x, y);
+    const tilePos = this.renderer.getTileAt(x, y);
 
     // Update preview
-    this.updatePreview(tile.x, tile.y);
+    this.updatePreview(tilePos.x, tilePos.y);
 
     // If dragging, continue placing (for roads, power lines, etc.)
     if (this.isDragging && this.toolbar.isInfraTool()) {
-      if (tile.x !== this.lastPlacedX || tile.y !== this.lastPlacedY) {
-        this.useTool(tile.x, tile.y);
+      if (tilePos.x !== this.lastPlacedX || tilePos.y !== this.lastPlacedY) {
+        this.useTool(tilePos.x, tilePos.y);
       }
     }
   }

@@ -546,3 +546,91 @@
   white-space: nowrap;
   will-change: transform;
 }
+
+/* Tile Info Popup */
+.tile-info-popup {
+  position: fixed;
+  z-index: 1000;
+  min-width: 180px;
+  max-width: 250px;
+  background: var(--win95-bg);
+  border: 2px solid;
+  border-color: var(--win95-highlight) var(--win95-dark-shadow) var(--win95-dark-shadow) var(--win95-highlight);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.5);
+  font-family: 'MS Sans Serif', Tahoma, sans-serif;
+  font-size: 11px;
+}
+
+.tile-info-header {
+  background: linear-gradient(90deg, #000080, #1084D0);
+  color: white;
+  padding: 2px 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tile-info-title {
+  font-weight: bold;
+  font-size: 11px;
+}
+
+.tile-info-close {
+  background: var(--win95-bg);
+  border: 2px solid;
+  border-color: var(--win95-highlight) var(--win95-dark-shadow) var(--win95-dark-shadow) var(--win95-highlight);
+  width: 16px;
+  height: 14px;
+  font-size: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 0;
+  line-height: 10px;
+}
+
+.tile-info-close:active {
+  border-color: var(--win95-dark-shadow) var(--win95-highlight) var(--win95-highlight) var(--win95-dark-shadow);
+}
+
+.tile-info-content {
+  padding: 8px;
+}
+
+.tile-info-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.tile-info-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.tile-info-label {
+  color: #444;
+}
+
+.tile-info-value {
+  font-weight: bold;
+  text-align: right;
+}
+
+.tile-info-status {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--win95-shadow);
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tile-info-status .status-on {
+  color: #008000;
+  font-size: 10px;
+}
+
+.tile-info-status .status-off {
+  color: #800000;
+  font-size: 10px;
+}

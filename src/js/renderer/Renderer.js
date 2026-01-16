@@ -79,8 +79,14 @@ class Renderer {
 
         const screenPos = this.camera.tileToScreen(x, y);
 
-        // Draw tile
-        if (tile.isRoad()) {
+        // Draw tile with animations for certain types
+        if (tile.type === TILE_TYPES.WATER) {
+          // Animated water
+          this.sprites.drawAnimatedWater(this.ctx, screenPos.x, screenPos.y, scale, this.animFrame);
+        } else if (tile.isBurning && tile.isBurning()) {
+          // Animated fire
+          this.sprites.drawAnimatedFire(this.ctx, screenPos.x, screenPos.y, scale, this.animFrame);
+        } else if (tile.isRoad()) {
           this.sprites.drawRoadConnected(
             this.ctx,
             this.city,
@@ -92,6 +98,10 @@ class Renderer {
           // Draw power line crossover on top of road if present
           if (tile.powerLineCrossover) {
             this.sprites.drawPowerLineCrossover(this.ctx, screenPos.x, screenPos.y, scale);
+          }
+          // Draw traffic animation for busy roads
+          if (tile.traffic > 50) {
+            this.sprites.drawTrafficAnimation(this.ctx, screenPos.x, screenPos.y, scale, this.animFrame, tile.traffic);
           }
         } else if (tile.isRail()) {
           // Draw rail with connected pattern and optional crossover
@@ -106,6 +116,15 @@ class Renderer {
           );
         } else {
           this.sprites.drawTile(this.ctx, tile, screenPos.x, screenPos.y, scale);
+        }
+
+        // Draw smoke for industrial and power plants
+        if (tile.isMainTile) {
+          if (tile.type === TILE_TYPES.COAL_POWER) {
+            this.sprites.drawSmoke(this.ctx, screenPos.x, screenPos.y, scale, this.animFrame, 2);
+          } else if (tile.isIndustrial() && tile.isBuilding() && tile.level >= 2) {
+            this.sprites.drawSmoke(this.ctx, screenPos.x, screenPos.y, scale, this.animFrame, 1);
+          }
         }
 
         // Draw overlay if active

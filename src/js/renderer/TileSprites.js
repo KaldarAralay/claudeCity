@@ -999,6 +999,131 @@ class TileSprites {
     }
   }
 
+  // Draw animated water tile with wave effect
+  drawAnimatedWater(ctx, screenX, screenY, scale, animFrame) {
+    const size = this.tileSize * scale;
+    const waveOffset = Math.sin(animFrame * 0.1) * 2;
+
+    // Base water color
+    ctx.fillStyle = '#4060B0';
+    ctx.fillRect(screenX, screenY, size, size);
+
+    // Animated wave highlights
+    ctx.fillStyle = '#5080D0';
+    for (let y = 0; y < size; y += size * 0.25) {
+      const offset = Math.sin((animFrame * 0.15) + y * 0.1) * scale * 2;
+      ctx.fillRect(screenX + offset, screenY + y, size, scale * 2);
+    }
+
+    // Shimmer effect
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+    const shimmerX = (animFrame * 2) % size;
+    ctx.fillRect(screenX + shimmerX, screenY, scale * 3, size);
+  }
+
+  // Draw animated fire with flickering flames
+  drawAnimatedFire(ctx, screenX, screenY, scale, animFrame) {
+    const size = this.tileSize * scale;
+
+    // Burned ground base
+    ctx.fillStyle = '#2A1A0A';
+    ctx.fillRect(screenX, screenY, size, size);
+
+    // Flame colors
+    const flameColors = ['#FF4500', '#FF6600', '#FF8C00', '#FFD700', '#FFFF00'];
+
+    // Draw multiple flame sprites with random heights
+    for (let i = 0; i < 4; i++) {
+      const flameX = screenX + (i * size * 0.25) + (Math.sin(animFrame * 0.3 + i) * scale);
+      const flameHeight = size * (0.4 + Math.sin(animFrame * 0.2 + i * 2) * 0.2);
+      const flameWidth = size * 0.3;
+
+      // Draw flame layers
+      for (let j = 0; j < flameColors.length; j++) {
+        ctx.fillStyle = flameColors[j];
+        const layerHeight = flameHeight * (1 - j * 0.15);
+        const layerWidth = flameWidth * (1 - j * 0.1);
+        const layerX = flameX + (flameWidth - layerWidth) / 2;
+        const layerY = screenY + size - layerHeight;
+        ctx.fillRect(layerX, layerY, layerWidth, layerHeight);
+      }
+    }
+
+    // Ember particles
+    ctx.fillStyle = '#FF6600';
+    for (let i = 0; i < 3; i++) {
+      const emberX = screenX + ((animFrame * 3 + i * 37) % size);
+      const emberY = screenY + size - ((animFrame * 2 + i * 23) % (size * 1.5));
+      if (emberY > screenY) {
+        ctx.fillRect(emberX, emberY, scale, scale);
+      }
+    }
+  }
+
+  // Draw smoke particle effect
+  drawSmoke(ctx, screenX, screenY, scale, animFrame, intensity = 1) {
+    const size = this.tileSize * scale;
+
+    // Smoke particles rising
+    ctx.fillStyle = 'rgba(80, 80, 80, 0.4)';
+    for (let i = 0; i < 3 * intensity; i++) {
+      const baseX = screenX + size * 0.3 + (i * size * 0.2);
+      const riseSpeed = 1.5 + (i * 0.3);
+      const smokeY = screenY - ((animFrame * riseSpeed + i * 20) % (size * 2));
+      const wobble = Math.sin(animFrame * 0.1 + i) * scale * 3;
+      const smokeSize = scale * (3 + Math.sin(animFrame * 0.05 + i) * 2);
+
+      if (smokeY > screenY - size * 2) {
+        ctx.beginPath();
+        ctx.arc(baseX + wobble, smokeY, smokeSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Lighter smoke layer
+    ctx.fillStyle = 'rgba(120, 120, 120, 0.25)';
+    for (let i = 0; i < 2 * intensity; i++) {
+      const baseX = screenX + size * 0.4 + (i * size * 0.25);
+      const riseSpeed = 1 + (i * 0.2);
+      const smokeY = screenY - ((animFrame * riseSpeed + i * 30 + 10) % (size * 2.5));
+      const wobble = Math.sin(animFrame * 0.08 + i + 1) * scale * 4;
+      const smokeSize = scale * (4 + Math.sin(animFrame * 0.04 + i) * 2);
+
+      if (smokeY > screenY - size * 2.5) {
+        ctx.beginPath();
+        ctx.arc(baseX + wobble, smokeY, smokeSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
+  // Draw animated traffic (cars) on a road tile
+  drawTrafficAnimation(ctx, screenX, screenY, scale, animFrame, trafficLevel) {
+    if (trafficLevel < 30) return; // No visible traffic for light traffic
+
+    const size = this.tileSize * scale;
+    const numCars = Math.min(3, Math.floor(trafficLevel / 60) + 1);
+
+    for (let i = 0; i < numCars; i++) {
+      // Car position based on animation frame
+      const carOffset = ((animFrame * 2 + i * 50) % (size * 2)) - size * 0.5;
+      const carX = screenX + size * 0.3 + (i % 2) * size * 0.3;
+      const carY = screenY + carOffset;
+
+      // Only draw if car is in tile bounds
+      if (carY > screenY && carY < screenY + size - scale * 3) {
+        // Car body
+        const carColors = ['#CC0000', '#0000CC', '#CCCC00', '#00CC00'];
+        ctx.fillStyle = carColors[i % carColors.length];
+        ctx.fillRect(carX, carY, scale * 3, scale * 4);
+
+        // Car windows
+        ctx.fillStyle = '#87CEEB';
+        ctx.fillRect(carX + scale * 0.5, carY + scale, scale * 2, scale * 1.5);
+      }
+    }
+  }
+
   // Draw power line crossover on top of road or rail
   // Power poles at edges of tile with wires crossing over
   drawPowerLineCrossover(ctx, screenX, screenY, scale) {
